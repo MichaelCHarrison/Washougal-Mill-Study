@@ -4,5 +4,5 @@ bomDT <- function(){
         library(data.table)
         bom_DT <- data.table(styleDF)
         
-        View(stylDT)
+        bom_DT
 }
