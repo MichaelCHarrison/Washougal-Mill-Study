@@ -1,12 +1,13 @@
 rangeSummary <- function(){ 
         range_df <- read.csv("/Users/michaelharrison/Desktop/Pendleton/CSVs/Stops-Extract.csv")
         
-        library(dplyr)
-        range_tbl <- tbl_df(range_df)
-        range_tbl$RANGE <- as.numeric(as.character(range_tbl$RANGE))
-        range_tbl %>%
-                group_by()
-        
+        # library(dplyr)
+        # range_tbl <- tbl_df(range_df)
+        # range_tbl$RANGE <- as.numeric(as.character(range_tbl$RANGE))
+        # range_tbl %>%
+        #         group_by(range_tbl$RANGE)%>%
+        #         
+        # 
         
         library(data.table)
         range_dt <- data.table(range_df)
