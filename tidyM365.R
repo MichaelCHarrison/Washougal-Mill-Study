@@ -8,10 +8,13 @@ tidyM365 <- function(){
         names(m365_tbl) <- sub("\\.", "", names(m365_tbl))
         m365_tbl$duedate <- mdy(m365_tbl$duedate)
         m365_tbl$date <- mdy(m365_tbl$date)
-        
-        #m365_tbl$millstyle <- gsub("(^.+[1-9]+")
-        
-        m365_tbl
+        m365_tbl$millstyle <- as.character(m365_tbl$millstyle)
+        m365_tbl <- m365_tbl[!grepl("EX", m365_tbl$millstyle),]
+        m365_tbl$range <- gsub("(^[^1-9]*)(\\d+)((-|[A-Z]).+$)", "\\2", m365_tbl$millstyle)
+
+        m365_tbl %>%
+               select(range, order, duedate, date, yds, loom)
+
 }       
         
         # range_tbl <- tbl_df(range_df)
