@@ -1,15 +1,17 @@
 tidyM365 <- function(){ 
-        library(lubridate)
+        library(lubridate, dplyr)
         
-        raw_df <- read.csv("/Users/michaelharrison/Desktop/Pendleton/CSVs/Stops-Extract.csv")
+        m365_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/M365.csv", 
+                           na.strings = "N/A"))
         
-        names(raw_df) <- tolower(names(raw_df))
-        names(raw_df) <- sub("\\.", "", names(raw_df))
-        colnames(raw_df)[3] <- "loom"
-        raw_df$date <- mdy(raw_df$date)
-        tidy_df <- raw_df
-        tidy_df
+        names(m365_tbl) <- tolower(names(m365_tbl))
+        names(m365_tbl) <- sub("\\.", "", names(m365_tbl))
+        m365_tbl$duedate <- mdy(m365_tbl$duedate)
+        m365_tbl$date <- mdy(m365_tbl$date)
         
+        #m365_tbl$millstyle <- gsub("(^.+[1-9]+")
+        
+        m365_tbl
 }       
         
         # range_tbl <- tbl_df(range_df)
