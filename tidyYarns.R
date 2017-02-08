@@ -3,6 +3,7 @@ tidyYarns <- function(){
         twist_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-TwistYarns.csv")
         dyed_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-DyedYarns.csv")
         spun_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-SpunYarns.csv")
+        #read all csvs containing string "Yarns" into list, then bind?
         
         library(dplyr)
         yarn_df <- suppressWarnings(bind_rows(pur_df, twist_df, dyed_df, spun_df))

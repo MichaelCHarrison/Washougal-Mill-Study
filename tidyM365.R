@@ -1,5 +1,5 @@
 tidyM365 <- function(){ 
-        library(lubridate, dplyr)
+        library(dplyr); library(lubridate)
         
         m365_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/M365.csv", 
                            na.strings = "N/A"))

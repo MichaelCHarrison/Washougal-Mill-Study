@@ -1,5 +1,5 @@
 tidyBom <- function(){
-        library(dplyr, lubridate)
+        library(dplyr); library(lubridate)
         
         bom_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/Stops-MillStyleYarnBOMs.csv"))
         

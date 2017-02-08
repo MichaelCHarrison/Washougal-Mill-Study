@@ -1,5 +1,5 @@
 tidyStops <- function(){ 
-        library(lubridate, dplyr)
+        library(dplyr); library(lubridate)
         
         stops_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/Stops-Extract.csv"))
         
