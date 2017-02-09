@@ -23,6 +23,7 @@ plotStops <- function (){
         #                    range <- factor(range, 
         #                                       levels=range(sort(table(range), 
         #                                                         decreasing=TRUE))))        
+        
         #explanation of outliers
         library(plyr)
         splits <- dlply(stops_df, .(stops_df$range))   
@@ -42,14 +43,7 @@ plotStops <- function (){
                 summarize(totalweft = sum(weft),
                           totalwarp = sum(warp),
                           totalother = sum(other))
-        
-        totalstops <- stops_df %>%
-                group_by(range) %>%
-                summarize(totalstops = sum(combinedstops)) %>%
-                arrange(desc(totalstops))
-        
-        
-        
+
         #ppm vs combinedstops
         combstops <- ggplot(stops_df, aes(ppm, combinedstops))
         combstops + geom_point(color = "red", size = .5, alpha = 1/3) + xlim(190,450) 
@@ -61,8 +55,17 @@ plotStops <- function (){
         #plotting ppm vs. warp based on specific range value
         warpstops <- ggplot(stops_df[stops_df$range == 1000,], aes(ppm, warp))
         warpstops2 <- ggplot(subset(stops_df, range = 1000), aes(ppm, warp)) #more readable
+        library(dplyr) #dplyr option
+        warpstops3 <- ggplot(filter(stops_df, range == 1000), aes(ppm, warp))
         warpstops + geom_point()
         warpstops2 + geom_point()
+        warpstops3 + geom_point()
+        
+        #other stops
+        otherstops
+                
+        #plotting against the date
+        qplot(date, data=stops_df, geom="bar", weight = combinedstops)
         
         
         

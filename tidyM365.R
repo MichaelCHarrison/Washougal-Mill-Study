@@ -13,7 +13,7 @@ tidyM365 <- function(){
         m365_tbl$range <- gsub("(^[^1-9]*)(\\d+)((-|[A-Z]).+$)", "\\2", m365_tbl$millstyle)
 
         m365_tbl %>%
-               select(range, order, duedate, date, yds, loom) %>%
+               select(range, millstyle, order, duedate, date, yds, loom) %>%
                 print()
                
 }
