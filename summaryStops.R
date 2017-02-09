@@ -1,4 +1,8 @@
-summaryStops <- function(data, groupby){
+## Arrange function options: totalpicks, totalstops, mpicksperstop
+## Ideally you can use this to funnel information into plot development? 
+## Not sure how that works yet...
+
+summaryStops <- function(data, groupby, arrangeby){
         library(dplyr)
         
         summaryStops <- data
@@ -7,6 +11,6 @@ summaryStops <- function(data, groupby){
                 summarize(totalpicks = sum(mpx),
                           totalstops = sum(combinedstops),
                           mpicksperstop = (totalpicks/totalstops)) %>%
-                arrange(desc(mpicksperstop)) %>%
+                arrange_(paste("desc(", arrangeby, ")")) %>%
                 print()
 }

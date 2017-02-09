@@ -11,10 +11,4 @@ millStyle <- function(){
                 arrange(desc(productionTime))%>%
                        print
         
-        # library(data.table, lubridate)
-        # millStyle_dt <- data.table(millStyle_df)
-        # 
-        # millStyle_dt$Date <- as.Date(millStyle_dt$Date, 
-        #                              format = guess_formats(millStyle_dt$Date, c('mdy')))
-        # millStyle_dt
 }       

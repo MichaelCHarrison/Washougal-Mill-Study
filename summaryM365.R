@@ -1,5 +1,5 @@
 summaryM365 <- function(data, groupby){ 
-        library(lubridate, dplyr)
+        library(lubridate); library(dplyr)
         
         summaryM365 <- data
         summaryM365 %>%
