@@ -1,14 +1,14 @@
-millStyle <- function(data = summaryStops() ){
+compM365 <- function(data = tidyM365()){
         library(dplyr);
         
-        bom <- data
+        comp_m365 <- data
         
         ## play with the date column more, perhaps set a new variable 
         
-        tidy_m365 %>%
-                group_by(range, millstyle, order, loom, date) %>%
+        comp_m365 %>%
+                group_by(date, range, millstyle, order, loom) %>%
                 summarize(totalyards = sum(yds)) %>%
-                arrange(desc(range)) %>%
+                arrange(desc(date)) %>%
                 print() #The data returned is good for ploting date by yards by range
         
 }        
