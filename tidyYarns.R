@@ -11,7 +11,7 @@ tidyYarns <- function(){
         names(yarn_df) <- sub("\\.","",names(yarn_df))
         yarn_tbl <- tbl_df(yarn_df)
         yarn_tbl <- yarn_tbl %>%
-                select(yarn, millstyle, pounds, type)
+                select(millstyle, yarn, pounds, type)
                 #mutate a new variable of number of yarns that go into a millstyle
         
         yarn_tbl
