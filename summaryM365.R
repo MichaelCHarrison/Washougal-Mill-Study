@@ -1,4 +1,4 @@
-summaryM365 <- function(data, groupby){ 
+summaryM365 <- function(data = tidyM365(), groupby = ){ 
         library(lubridate); library(dplyr)
         
         summaryM365 <- data
