@@ -15,8 +15,6 @@ tidyM365 <- function(){
         m365_tbl %>% 
                 select(range, millstyle, order, duedate, date, yds, loom) %>%
                 print()
-               
-        #plot(date, totalyards, data = millStyle()) -- built to show application
 }
 
 
