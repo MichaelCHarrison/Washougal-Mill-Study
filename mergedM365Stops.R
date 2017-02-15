@@ -1,4 +1,4 @@
-mergedM365Stops <- function(df1 = compStops(), df2 = compM365()){
+mergedM365Stops <- function(df1 = compStops(), df2 = compM365(), rangeno = NULL){
         library(dplyr);
         
         stops_df <- df1
@@ -11,5 +11,6 @@ mergedM365Stops <- function(df1 = compStops(), df2 = compM365()){
                 select(date, range, millstyle, order, loom, 
                        avgppm, mpx, weft, warp, other, 
                        combinedstops, totalyards) %>%
-                arrange(date, loom)
+                arrange(date, loom) %>%
+                filter(range == rangeno)
 }
