@@ -1,0 +1,33 @@
+---
+title: "Washougal Mill"
+author: "Michael Harrison"
+date: "April 19, 2017"
+output: html_document
+---
+
+```{r}
+range(tidy_Stops$date)
+```
+```{r}
+range(tidy_m365$date)
+```
+
+Set the time ranges to be equal to each other
+```{r}
+stops_timeframe <- tidy_Stops %>% filter(date >= "2015-07-15",
+                                         date <= "2016-12-13")
+m365_timeframe <- tidy_m365 %>% filter(date >= "2015-07-15",
+                                       date <= "2016-12-13")
+```
+
+```{r}
+df_lengths <- c(nrow(stops_timeframe), nrow(m365_timeframe))
+df_lengths
+```
+```{r}
+range(stops_timeframe$date)
+```
+```{r}
+range(m365_timeframe$date)
+```
+
