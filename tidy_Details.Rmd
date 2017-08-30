@@ -1,0 +1,40 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# tidy_BOM details
+
+- Number of MillStyles
+```{r}
+length(unique(tidy_Bom$millstyle))
+```
+- Number of Yarns
+```{r}
+length(unique(tidy_Bom$yarn))
+```
+
+# tidy_m365 Details
+
+# tidyStops
+
+- tidyStops only contains details for stoppage information for range and not millstyle
+
+# tidyYarns
+
+- Number of Millstyles
+```{r}
+length(unique(tidy_yarns$millstyle))
+```
+
+- Number of Yarns
+```{r}
+length(unique(tidy_yarns$yarn))
+```
+
+
+- types of yarn
+```{r}
+unique(tidy_yarns$type)
+```
+
