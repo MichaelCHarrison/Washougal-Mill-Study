@@ -1,6 +1,7 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output: rmarkdown::github_document
+
 ---
 
 
@@ -64,12 +65,12 @@ length(unique(tidy_Bom$millstyle))
 
 - Number of Yarns
 
-It appears that there are 93 yarns listed in the bill of materials (tidy_Boms) that do not appear in tidyYarns
+It appears that there is a 93 yarn difference between the bill of materials (tidy_Boms) and tidyYarns (630 unique yarns present in tidy_yarns)
 ```{r}
 length(unique(tidy_Bom$yarn))
 ```
 
-Those yarns are:
+The yarns that differ between the two sets are:
 ```{r}
 yarn_diff <- setdiff(tidy_Bom$yarn, tidy_yarns$yarn)
 yarn_diff
@@ -80,7 +81,7 @@ yarn_diff
 length(yarn_diff)
 ```
 
-It appears there are 173 yarns listed in the tidy_Boms (bill of materials) that are not present in the tidy_yarns, which differs from the number of yarns based on counts of yarns present in tidy_Boms and tidy_yarns.
+It appears there is a 173 yarn difference between the two datasets. 
 
 Let's look into this...
 
@@ -111,7 +112,19 @@ length(unique(tidy_Bom_diff))
 ```
 
 
+- intesection between the tidy_yarns$yarn and tidy_Bom$yars
+```{r}
+tidy_bom_yarns_intersect <- intersect(tidy_yarns$yarn, tidy_Bom$yarn)
+#tidy_bom_yarns_intersect
+```
 
+- number of common yarns between the two datasets
+```{r}
+length(tidy_bom_yarns_intersect)
+```
+
+
+- In regards to tidy_yarns$pounds, it is not specific as to what the amount listed per millstyle means
 
 
 - Earliest Date Used Listed
@@ -126,6 +139,17 @@ max(tidy_Bom$datelastused)
 
 # tidy_m365 Details
 
+- number of millstyles present in m365
+
+For reference, the number of unique millstyles in tidy_Bom is 957 and 535 for tidy_yarns
+```{r}
+length(unique(tidy_m365$millstyle))
+```
+
+- intersection between tidy_m365$millstyle and tidy_BOM$millstyle
+```{r}
+intersect(tidy_m365$millstyle, tidy_Bom$millstyle)
+```
 
 
 
