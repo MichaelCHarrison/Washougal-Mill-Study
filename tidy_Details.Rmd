@@ -3,38 +3,133 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-# tidy_BOM details
-
-- Number of MillStyles
-```{r}
-length(unique(tidy_Bom$millstyle))
-```
-- Number of Yarns
-```{r}
-length(unique(tidy_Bom$yarn))
-```
-
-# tidy_m365 Details
-
-# tidyStops
-
-- tidyStops only contains details for stoppage information for range and not millstyle
 
 # tidyYarns
+tidyYarns is a function that binds the data from the types of yarns used in production
 
 - Number of Millstyles
 ```{r}
 length(unique(tidy_yarns$millstyle))
 ```
 
-- Number of Yarns
+- Number of Yarns used in production 
 ```{r}
 length(unique(tidy_yarns$yarn))
 ```
-
 
 - types of yarn
 ```{r}
 unique(tidy_yarns$type)
 ```
+
+- number of purchased yarns
+```{r}
+unique_pur <- unique(tidy_yarns$yarn[which(tidy_yarns$type == 'Pur')])
+num_pur <- length(unique_pur)
+num_pur
+```
+
+- number of twisted yarns
+```{r}
+unique_twist <- unique(tidy_yarns$yarn[which(tidy_yarns$type == 'Twist')])
+num_twist <- length(unique_twist)
+num_twist
+```
+
+- number of dyed yarns
+```{r}
+unique_dye <- unique(tidy_yarns$yarn[which(tidy_yarns$type == 'Dye')])
+num_dye <- length(unique_dye)
+num_dye
+```
+
+- number of spun yarns 
+```{r}
+unique_spun <- unique(tidy_yarns$yarn[which(tidy_yarns$type == 'Spun')])
+num_spun <- length(unique_spun)
+num_spun
+```
+
+- Verify number of yarns
+```{r}
+num_pur + num_dye + num_twist + num_spun
+```
+
+# tidy_BOM details
+
+- Number of MillStyles
+```{r}
+length(unique(tidy_Bom$millstyle))
+```
+
+- Number of Yarns
+
+It appears that there are 93 yarns listed in the bill of materials (tidy_Boms) that do not appear in tidyYarns
+```{r}
+length(unique(tidy_Bom$yarn))
+```
+
+Those yarns are:
+```{r}
+yarn_diff <- setdiff(tidy_Bom$yarn, tidy_yarns$yarn)
+yarn_diff
+```
+
+- numbers of yarns in difference
+```{r}
+length(yarn_diff)
+```
+
+It appears there are 173 yarns listed in the tidy_Boms (bill of materials) that are not present in the tidy_yarns, which differs from the number of yarns based on counts of yarns present in tidy_Boms and tidy_yarns.
+
+Let's look into this...
+
+```{r}
+common_yarns <- unique(tidy_yarns$yarn[tidy_yarns$yarn %in% tidy_Bom$yarn])
+length(common_yarns)
+```
+
+So based on the calculation above, only 550 yarns are present in both data sets.
+
+```{r}
+'%nin%' <- Negate('%in%')
+tidy_yarn_diff <- tidy_yarns$yarn[tidy_yarns$yarn %nin% tidy_Bom$yarn]
+unique(tidy_yarn_diff)
+```
+```{r}
+length(unique(tidy_yarn_diff))
+```
+
+
+```{r}
+'%nin%' <- Negate('%in%')
+tidy_Bom_diff <- tidy_Bom$yarn[tidy_Bom$yarn %nin% tidy_yarns$yarn]
+unique(tidy_Bom_diff)
+```
+```{r}
+length(unique(tidy_Bom_diff))
+```
+
+
+
+
+
+- Earliest Date Used Listed
+```{r}
+min(tidy_Bom$datelastused)
+```
+
+- Latest Date Used Listed
+```{r}
+max(tidy_Bom$datelastused)
+```
+
+# tidy_m365 Details
+
+
+
+
+# tidyStops Details
+
+- tidyStops only contains details for stoppage information for range and not millstyle
 
