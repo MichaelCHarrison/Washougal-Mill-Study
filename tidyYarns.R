@@ -12,6 +12,7 @@ tidyYarns <- function(){
         yarn_df <- bind_rows(pur_df, twist_df, dyed_df, spun_df)
         names(yarn_df) <- tolower(names(yarn_df))
         names(yarn_df) <- sub("\\.","",names(yarn_df))
+        #millstyle set to factor in attempt to get interesect() to work; 09/06
         yarn_df$millstyle <- as.factor(yarn_df$millstyle)
         yarn_df$yarn <- as.factor(yarn_df$yarn)
         yarn_tbl <- tbl_df(yarn_df)
