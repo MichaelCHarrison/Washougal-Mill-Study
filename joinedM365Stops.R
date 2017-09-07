@@ -1,5 +1,6 @@
 joinedM365Stops <- function(){
         library(sqldf); library(dplyr)
+        setwd()
         source(tidyM365.R); source(tidyStops())
         
         tidy_m365 <- tidyM365()
