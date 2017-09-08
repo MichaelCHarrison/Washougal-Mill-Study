@@ -6,8 +6,8 @@ joinedM365Stops <- function(){
         tidy_Stops <- tidyStops()
         
         sqltbl <- sqldf("SELECT date, loom, range, millstyle, ppm, mpx, yds, combinedstops 
-                        FROM tidy_m365
-                        JOIN tidy_Stops USING(date, loom, range)")
+                         FROM tidy_m365
+                         JOIN tidy_Stops USING(date, loom, range)")
         
         tidySQLtbl <- sqltbl %>%
                 group_by(date, range, millstyle, date, loom) %>%
