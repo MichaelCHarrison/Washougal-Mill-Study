@@ -1,33 +1,32 @@
 millstyleBreakdown <- function(){
         library(dplyr);
-        source(tidyYarns.R); source(tidyBom.R); source(tidyStops())
+        source("joinedBomYarns"); source("joinedM365Stop.R")
         
-        tidy_yarns <- tidyYarns()
-        tidy_m365 <- tidyBom()
-        tidy_stops <- tidyStops()
-        
-        #create empty dataframe
-        breakdown <- data.frame(millstyle = character(0),
-                                percent_pur = numeric(0),
-                                percent_twist = numeric(0),
-                                percent_dyed = numeric(0),
-                                percent_spun = numeric(0),
-                                num_yarns = integer(0),
-                                totalLbs = numeric(0))
-        
-        
-        millstyles <- unique(tidy_yarns$millstyle)
-        
-        # uniqueMill <- 
-        # uniqueMill <- 
+        # Set returned dataframe to variable
+        joined_BomYarns <- joinedBomYarns()
+        joined_M365Stops <- joinedM365Stops()
 
-        # As the dataframe is compiled, will need to think about how to deal with NA values
+        # Join the joined dataframes
+        breakdown <- merge(joined_BomYarns, 
+                           joined_M365Stops, 
+                           by = "millstyle", 
+                           all=TRUE)
         
-        
-        library(sqldf)
-        breakdown <- sqldf("SELECT
-                           FROM 
-                           JOIN ")
-        #https://stackoverflow.com/questions/1299871/how-to-join-merge-data-frames-inner-outer-left-right
-        
+        # Orders millstyle breakdown fields
+        breakdown <- 
+                na.omit(breakdown) %>%
+                select(millstyle, 
+                       loom, 
+                       lbsperstyle,
+                       numberofyarns,
+                       perc_spun,
+                       perc_twist,
+                       perc_pur,
+                       perc_dyed,
+                       avgppm,
+                       totalpx,
+                       totalstops,
+                       totalyards)
+
+        return(breakdown)
 }
