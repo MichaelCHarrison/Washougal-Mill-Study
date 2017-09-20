@@ -1,6 +1,6 @@
 millstyleBreakdown <- function(){
         library(dplyr);
-        source("joinedBomYarns"); source("joinedM365Stop.R")
+        source("joinedBomYarns.R"); source("joinedM365Stops.R")
         
         # Set returned dataframe to variable
         joined_BomYarns <- joinedBomYarns()
@@ -15,7 +15,7 @@ millstyleBreakdown <- function(){
         # Orders millstyle breakdown fields
         breakdown <- 
                 na.omit(breakdown) %>%
-                select(millstyle, 
+                select(millstyle,
                        loom, 
                        lbsperstyle,
                        numberofyarns,
