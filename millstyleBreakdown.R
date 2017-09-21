@@ -13,7 +13,7 @@ millstyleBreakdown <- function(){
                            all=TRUE)
         breakdown <-
                 breakdown %>%
-                select(-date)
+                select(-range)
 
         breakdown$loom <- as.factor(breakdown$loom)
         
