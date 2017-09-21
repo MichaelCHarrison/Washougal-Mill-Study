@@ -3,10 +3,14 @@ tidyYarns <- function(){
         # in future, access data from db and run through pre-processing below
         
         # reads in yarn information from csv files
-        pur_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-PurchasedYarns.csv")
-        twist_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-TwistYarns.csv")
-        dyed_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-DyedYarns.csv")
-        spun_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-SpunYarns.csv")
+        pur_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-PurchasedYarns.csv",
+                           stringsAsFactors=FALSE)
+        twist_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-TwistYarns.csv",
+                            stringsAsFactors=FALSE)
+        dyed_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-DyedYarns.csv",
+                           stringsAsFactors=FALSE)
+        spun_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-SpunYarns.csv",
+                            stringsAsFactors=FALSE)
 
         yarn_df <- bind_rows(pur_df, twist_df, dyed_df, spun_df)
         
@@ -16,7 +20,9 @@ tidyYarns <- function(){
         yarn_df$millstyle <- as.character(yarn_df$millstyle)
         yarn_df$millstyle <- gsub(" ", "", yarn_df$millstyle, fixed = TRUE)
         
-        yarn_df$yarn <- as.factor(yarn_df$yarn)
+        yarn_df$yarn <- as.character(yarn_df$yarn)
+        yarn_df$type <- as.character(yarn_df$type)
+        
         yarn_tbl <- tbl_df(yarn_df)
         yarn_tbl <- yarn_tbl %>%
                 select(yarn, type) 
