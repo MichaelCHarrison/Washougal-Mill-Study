@@ -3,6 +3,10 @@ predictStops <- function(){
         source("millstyleBreakdown.R")
         
         data <- na.omit(millstyleBreakdown())
+        data <- data[c(-millstyle, -date)]
+
+        data <- subset(data, select = -c(millstyle, date))
+        
         
         seed <- 7
         set.seed(seed)
@@ -21,43 +25,50 @@ predictStops <- function(){
         training <- dataset[-inTrain,]
         testing <- dataset[inTrain,]
         
+        
         # Set training control parameters for repeated cross validation and evaluation metric
         trainControl <- trainControl(method = "repeatedCV",
                                      number = 10,
                                      repeats = 3)
         metric <- "RMSE"
         
-        # 
+        
+        
+        
         
         # LM
-        set.seed(7)
-        fit.lm <- train(medv~., data=dataset, method="lm", 
-                        metric=metric, preProc=c("center", "scale"), 
+        set.seed(seed)
+        fit.lm <- train(totalstops~., data=training, method="lm", 
+                        metric=metric, 
                         trControl=trainControl)
         # GLM
-        set.seed(7)
-        fit.glm <- train(medv~., data=dataset, method="glm", 
-                         metric=metric, preProc=c("center", "scale"), 
+        set.seed(seed)
+        fit.glm <- train(totalstops~., data=training, method="glm", 
+                         metric=metric, 
                          trControl=trainControl)
         # GLMNET
-        set.seed(7)
-        fit.glmnet <- train(medv~., data=dataset, method="glmnet", metric=metric,
-                            preProc=c("center", "scale"), 
+        set.seed(seed)
+        fit.glmnet <- train(totalstops~., data=training, method="glmnet", metric=metric, 
                             trControl=trainControl)
         # SVM
-        set.seed(7)
-        fit.svm <- train(medv~., data=dataset, method="svmRadial", metric=metric,
-                         preProc=c("center", "scale"), 
+        set.seed(seed)
+        fit.svm <- train(totalstops~., data=training, method="svmRadial", metric=metric, 
                          trControl=trainControl)
         # CART
-        set.seed(7)
+        set.seed(seed)
         grid <- expand.grid(.cp=c(0, 0.05, 0.1))
-        fit.cart <- train(medv~., data=dataset, method="rpart", metric=metric, tuneGrid=grid,
-                          preProc=c("center", "scale"), 
+        fit.cart <- train(totalstops~., data=training, method="rpart", metric=metric, 
+                          tuneGrid=grid, 
                           trControl=trainControl)
         # KNN
-        set.seed(7)
-        fit.knn <- train(medv~., data=dataset, method="knn", 
-                         metric=metric, preProc=c("center", "scale"), 
+        set.seed(seed)
+        fit.knn <- train(totalstops~., data=training, method="knn", 
+                         metric=metric, 
                          trControl=trainControl)
+        
+        # Results
+        results <- resamples(list(LM=fit.lm, GLM=fit.glm, GLMNET=fit.glmnet, SVM=fit.svm,
+                                  CART=fit.cart, KNN=fit.knn))
+        
+        
 }
