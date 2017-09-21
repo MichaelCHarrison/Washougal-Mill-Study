@@ -11,22 +11,11 @@ millstyleBreakdown <- function(){
                            joined_M365Stops, 
                            by = "millstyle", 
                            all=TRUE)
-        
-        # Orders millstyle breakdown fields
-        breakdown <- 
-                na.omit(breakdown) %>%
-                select(millstyle,
-                       loom, 
-                       lbsperstyle,
-                       numberofyarns,
-                       perc_spun,
-                       perc_twist,
-                       perc_pur,
-                       perc_dyed,
-                       avgppm,
-                       totalpx,
-                       totalstops,
-                       totalyards)
+        breakdown <-
+                breakdown %>%
+                select(-date, -range)
 
+        breakdown$loom <- as.factor(breakdown$loom)
+        
         return(breakdown)
 }
