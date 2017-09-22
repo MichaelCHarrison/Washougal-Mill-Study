@@ -47,75 +47,75 @@ metric <- "RMSE"
 Set Model Evaluation
  - No pre processing
 ```{r}
-        #Linear Model
-        set.seed(seed)
-        fit.lm <- train(totalstops~.,
-                        data = training,
-                        method = "lm",
-                        metric = metric,
-                        trControl = trainControl)
-        
-        
-        #Generalized Linear Model
-        set.seed(seed)
-        fit.glm <- train(totalstops~.,
-                         data = training,
-                         method = "glm",
-                         metric = metric,
-                         trControl = trainControl)
-        
-        #GLMNET
-        set.seed(seed)
-        fit.glmnet <- train(totalstops~.,
-                            data = training,
-                            method = "glmnet",
-                            metric = metric,
-                            trControl = trainControl)
-        
-        # SVM
-        set.seed(seed)
-        fit.svm <- train(totalstops~.,
-                         data = training,
-                         method = "svmRadial",
-                         metric = metric,
-                         trControl = trainControl)
-        
-        # CART
-        set.seed(seed)
-        grid <- expand.grid(.cp=c(0, 0.05, 0.1))
-        fit.cart <- train(totalstops~.,
-                          data = training,
-                          method = "rpart",
-                          metric = metric,
-                          tuneGrid=grid,
-                          trControl = trainControl)
-                
+#Linear Model
+set.seed(seed)
+fit.lm <- train(totalstops~.,
+                data = training,
+                method = "lm",
+                metric = metric,
+                trControl = trainControl)
 
-        # KNN
-        set.seed(seed)
-        fit.knn <- train(totalstops~.,
-                         data = training,
-                         method = "knn",
-                         metric = metric,
-                         trControl = trainControl)
+
+#Generalized Linear Model
+set.seed(seed)
+fit.glm <- train(totalstops~.,
+                 data = training,
+                 method = "glm",
+                 metric = metric,
+                 trControl = trainControl)
+
+#GLMNET
+set.seed(seed)
+fit.glmnet <- train(totalstops~.,
+                    data = training,
+                    method = "glmnet",
+                    metric = metric,
+                    trControl = trainControl)
+
+# SVM
+set.seed(seed)
+fit.svm <- train(totalstops~.,
+                 data = training,
+                 method = "svmRadial",
+                 metric = metric,
+                 trControl = trainControl)
+
+# CART
+set.seed(seed)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+fit.cart <- train(totalstops~.,
+                  data = training,
+                  method = "rpart",
+                  metric = metric,
+                  tuneGrid=grid,
+                  trControl = trainControl)
         
-        # Random Forest
-        set.seed(seed)
-        fit.rf <- train(totalstops~.,
-                        data = training,
-                        method = "rf",
-                        metric = metric,
-                        trControl = trainControl)
-        
-         
-        # Results
-        fit.results <- resamples(list(LM=fit.lm, 
-                                  GLM=fit.glm, 
-                                  GLMNET=fit.glmnet, 
-                                  SVM=fit.svm,
-                                  CART=fit.cart, 
-                                  KNN=fit.knn,
-                                  RF=fit.rf))
+
+# KNN
+set.seed(seed)
+fit.knn <- train(totalstops~.,
+                 data = training,
+                 method = "knn",
+                 metric = metric,
+                 trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+fit.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                trControl = trainControl)
+
+ 
+# Results
+fit.results <- resamples(list(LM=fit.lm, 
+                          GLM=fit.glm, 
+                          GLMNET=fit.glmnet, 
+                          SVM=fit.svm,
+                          CART=fit.cart, 
+                          KNN=fit.knn,
+                          RF=fit.rf))
 ```
 
 # Display results
@@ -217,10 +217,110 @@ preProc.rf <- train(totalstops~.,
  
 # Results
 preProc.results <- resamples(list(LM=preProc.lm, 
-                          GLM=preProc.glm, 
-                          GLMNET=preProc.glmnet, 
-                          SVM=preProc.svm,
-                          CART=preProc.cart, 
-                          KNN=preProc.knn,
-                          RF=preProc.rf))
+                                  GLM=preProc.glm, 
+                                  GLMNET=preProc.glmnet, 
+                                  SVM=preProc.svm,
+                                  CART=preProc.cart, 
+                                  KNN=preProc.knn,
+                                  RF=preProc.rf))
 ```
+
+
+#PreProcessing Results
+
+```{r}
+summary(preProc.results)
+```
+
+```{r}
+dotplot(preProc.results)
+```
+
+
+
+# PreProcess with BoxCox
+```{r}
+#Linear Model
+set.seed(seed)
+boxcox.lm <- train(totalstops~.,
+                data = training,
+                method = "lm",
+                metric = metric,
+                preProc=c("center", "scale", "BoxCox"),
+                trControl = trainControl)
+
+
+#Generalized Linear Model
+set.seed(seed)
+boxcox.glm <- train(totalstops~.,
+                 data = training,
+                 method = "glm",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 trControl = trainControl)
+
+#GLMNET
+set.seed(seed)
+boxcox.glmnet <- train(totalstops~.,
+                    data = training,
+                    method = "glmnet",
+                    metric = metric,
+                    preProc=c("center", "scale", "BoxCox"),
+                    trControl = trainControl)
+
+# SVM
+set.seed(seed)
+boxcox.svm <- train(totalstops~.,
+                 data = training,
+                 method = "svmRadial",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 trControl = trainControl)
+
+# CART
+set.seed(seed)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+boxcox.cart <- train(totalstops~.,
+                  data = training,
+                  method = "rpart",
+                  metric = metric,
+                  preProc=c("center", "scale", "BoxCox"),
+                  tuneGrid=grid,
+                  trControl = trainControl)
+        
+
+# KNN
+set.seed(seed)
+boxcox.knn <- train(totalstops~.,
+                 data = training,
+                 method = "knn",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+boxcox.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                preProc=c("center", "scale", "BoxCox"),
+                trControl = trainControl)
+
+ 
+# Results
+boxcox.results <- resamples(list(LM=boxcox.lm, 
+                                  GLM=boxcox.glm, 
+                                  GLMNET=boxcox.glmnet, 
+                                  SVM=boxcox.svm,
+                                  CART=boxcox.cart, 
+                                  KNN=boxcox.knn,
+                                  RF=boxcox.rf))
+```
+
+
+# Box Cox Results
+```{r}
+summary(boxcox.results)
+```
+
