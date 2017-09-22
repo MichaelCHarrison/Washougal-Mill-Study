@@ -1,0 +1,44 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Load necessary package and data from file
+```{r}
+library(caret)
+source("millstyleBreakdown.R")
+
+# Data contains NAs generated from merging tables
+data <- na.omit(millstyleBreakdown())
+# Removing row identifier (millstyle), and initially date
+data <- subset(data, select = -c(millstyle, date))
+```
+
+
+```{r}
+seed <- 7
+set.seed(seed)
+
+# Partitions data to create validation set for model
+inVal <- createDataPartition(data$totalstops,
+                             p = .85,
+                             list = FALSE)
+validation <- data[-inVal,]
+traing_test <- data[inVal,]
+
+# Create training/testing sets
+inTrain <- createDataPartition(dataset$totalstops, 
+                               p = .85,
+                               list = FALSE)
+training <- traing_test[inTrain,]
+testing <- traing_test[-inTrain,]
+        
+        
+        # Set training control parameters for repeated cross validation and evaluation metric
+        trainControl <- trainControl(method = "repeatedCV",
+                                     number = 10,
+                                     repeats = 3)
+        metric <- "RMSE"
+```
+
