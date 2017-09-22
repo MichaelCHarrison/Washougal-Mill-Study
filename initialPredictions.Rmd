@@ -1,6 +1,6 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output: rmarkdown::github_document
 ---
 
 
@@ -16,6 +16,7 @@ data <- subset(data, select = -c(millstyle, date))
 ```
 
 
+Establishes seed for consequent use in model development
 ```{r}
 seed <- 7
 set.seed(seed)
@@ -35,10 +36,191 @@ training <- traing_test[inTrain,]
 testing <- traing_test[-inTrain,]
         
         
-        # Set training control parameters for repeated cross validation and evaluation metric
-        trainControl <- trainControl(method = "repeatedCV",
-                                     number = 10,
-                                     repeats = 3)
-        metric <- "RMSE"
+# Set training control parameters for repeated cross validation and evaluation metric
+trainControl <- trainControl(method = "repeatedCV",
+                             number = 10,
+                             repeats = 3)
+metric <- "RMSE"
 ```
 
+
+Set Model Evaluation
+ - No pre processing
+```{r}
+        #Linear Model
+        set.seed(seed)
+        fit.lm <- train(totalstops~.,
+                        data = training,
+                        method = "lm",
+                        metric = metric,
+                        trControl = trainControl)
+        
+        
+        #Generalized Linear Model
+        set.seed(seed)
+        fit.glm <- train(totalstops~.,
+                         data = training,
+                         method = "glm",
+                         metric = metric,
+                         trControl = trainControl)
+        
+        #GLMNET
+        set.seed(seed)
+        fit.glmnet <- train(totalstops~.,
+                            data = training,
+                            method = "glmnet",
+                            metric = metric,
+                            trControl = trainControl)
+        
+        # SVM
+        set.seed(seed)
+        fit.svm <- train(totalstops~.,
+                         data = training,
+                         method = "svmRadial",
+                         metric = metric,
+                         trControl = trainControl)
+        
+        # CART
+        set.seed(seed)
+        grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+        fit.cart <- train(totalstops~.,
+                          data = training,
+                          method = "rpart",
+                          metric = metric,
+                          tuneGrid=grid,
+                          trControl = trainControl)
+                
+
+        # KNN
+        set.seed(seed)
+        fit.knn <- train(totalstops~.,
+                         data = training,
+                         method = "knn",
+                         metric = metric,
+                         trControl = trainControl)
+        
+        # Random Forest
+        set.seed(seed)
+        fit.rf <- train(totalstops~.,
+                        data = training,
+                        method = "rf",
+                        metric = metric,
+                        trControl = trainControl)
+        
+         
+        # Results
+        fit.results <- resamples(list(LM=fit.lm, 
+                                  GLM=fit.glm, 
+                                  GLMNET=fit.glmnet, 
+                                  SVM=fit.svm,
+                                  CART=fit.cart, 
+                                  KNN=fit.knn,
+                                  RF=fit.rf))
+```
+
+# Display results
+```{r}
+summary(fit.results)
+```
+
+#Plot results of initial fit
+```{r}
+dotplot(fit.results)
+```
+
+
+#Feature Selection
+
+```{r}
+cutoff <- 0.70
+correlations <- cor(dataset[,1:13])
+highlyCorrelated <- findCorrelation(correlations, cutoff=cutoff)
+for (value in highlyCorrelated) {
+  print(names(dataset)[value])
+}
+datasetFeatures <- dataset[,-highlyCorrelated]
+dim(datasetFeatures)
+```
+
+
+
+
+#Compare with pre-processing
+```{r}
+#Linear Model
+set.seed(seed)
+preProc.lm <- train(totalstops~.,
+                data = training,
+                method = "lm",
+                metric = metric,
+                preProc=c("center", "scale"),
+                trControl = trainControl)
+
+
+#Generalized Linear Model
+set.seed(seed)
+preProc.glm <- train(totalstops~.,
+                 data = training,
+                 method = "glm",
+                 metric = metric,
+                 preProc=c("center", "scale"),
+                 trControl = trainControl)
+
+#GLMNET
+set.seed(seed)
+preProc.glmnet <- train(totalstops~.,
+                    data = training,
+                    method = "glmnet",
+                    metric = metric,
+                    preProc=c("center", "scale"),
+                    trControl = trainControl)
+
+# SVM
+set.seed(seed)
+preProc.svm <- train(totalstops~.,
+                 data = training,
+                 method = "svmRadial",
+                 metric = metric,
+                 preProc=c("center", "scale"),
+                 trControl = trainControl)
+
+# CART
+set.seed(seed)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+preProc.cart <- train(totalstops~.,
+                  data = training,
+                  method = "rpart",
+                  metric = metric,
+                  preProc=c("center", "scale"),
+                  tuneGrid=grid,
+                  trControl = trainControl)
+        
+
+# KNN
+set.seed(seed)
+preProc.knn <- train(totalstops~.,
+                 data = training,
+                 method = "knn",
+                 metric = metric,
+                 preProc=c("center", "scale"),
+                 trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+preProc.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                preProc=c("center", "scale"),
+                trControl = trainControl)
+
+ 
+# Results
+preProc.results <- resamples(list(LM=preProc.lm, 
+                          GLM=preProc.glm, 
+                          GLMNET=preProc.glmnet, 
+                          SVM=preProc.svm,
+                          CART=preProc.cart, 
+                          KNN=preProc.knn,
+                          RF=preProc.rf))
+```
