@@ -323,4 +323,53 @@ boxcox.results <- resamples(list(LM=boxcox.lm,
 ```{r}
 summary(boxcox.results)
 ```
+# Graph box cox 
+```{r}
+dotplot(boxcox.results)
+```
+
+# Additional boosting algos
+
+```{r}
+# Gradient Boosted Machine
+set.seed(seed)
+boxcox.gbm <- train(totalstops~.,
+                 data = training,
+                 method = "gbm",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 trControl = trainControl)
+
+# Adaboost
+set.seed(seed)
+boxcox.adaboost <- train(totalstops~.,
+                 data = training,
+                 method = "adaboost",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 trControl = trainControl)
+
+# Adaboost
+set.seed(seed)
+boxcox.adaM1 <- train(totalstops~.,
+                 data = training,
+                 method = "AdaBoost.M1",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 trControl = trainControl)
+
+# Results
+boxcox.boosting.results <- resamples(list(adaboost = boxcox.adaboost,
+                                          adaM1 = boxcox.adaM1,
+                                          gbm = boxcox.gbm,
+                                          RF=boxcox.rf))
+summary(boxcox.boosting.results)
+```
+
+
+# Tune Random Forest
+
+```{r}
+
+```
 
