@@ -370,6 +370,28 @@ summary(boxcox.boosting.results)
 # Tune Random Forest
 
 ```{r}
+boxcox.rf$bestTune
+```
 
+
+```{r}
+#Grid Search Tuning
+
+trainControl <- trainControl(method = "repeatedcv", 
+                             number = 10, 
+                             repeats = 3, 
+                             search = "grid")
+
+tunegrid <- expand.grid(.mtry = c(15:25))
+
+fit.rfGrid <- train(totalstops~.,
+                 data = training,
+                 method = "rf",
+                 metric = metric,
+                 preProc=c("center", "scale", "BoxCox"),
+                 tuneGrid = tunegrid,
+                 trControl = trainControl)
+
+fit.rfGrid
 ```
 
