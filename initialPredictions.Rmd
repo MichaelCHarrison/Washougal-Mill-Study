@@ -4,7 +4,8 @@ output: rmarkdown::github_document
 ---
 
 
-# Initial Baseline Model
+# Initial Model Fit; without date feature
+
 Load necessary package and data from file
 ```{r}
 library(caret)
@@ -17,19 +18,19 @@ data <- subset(data, select = -c(millstyle, date))
 ```
 
 
-Establishes seed for consequent use in model development
 ```{r}
+#Establishes constant seed for consequent use in model development
 seed <- 7
 set.seed(seed)
 
-# Partitions data to create validation set for model
+# Partitions data to create training, validation, and testing sets for model comparison;
+# Data is split 60/20/20 training, validation, testing
 inVal <- createDataPartition(data$totalstops,
                              p = .6,
                              list = FALSE)
 val_test <- data[-inVal,]
 training <- data[inVal,]
 
-# Create training/testing sets
 inTrain <- createDataPartition(val_test$totalstops, 
                                p = .5,
                                list = FALSE)
@@ -40,14 +41,26 @@ testing <- val_test[-inTrain,]
 # Set training control parameters for repeated cross validation and evaluation metric
 trainControl <- trainControl(method = "repeatedCV",
                              number = 10,
-                             repeats = 3)
+                             repeats = 3,
+                             allowParallel = TRUE)
 metric <- "RMSE"
+
+
+# Prepares Workbook for Parallel Processing
+library(parallel)
+library(doParallel)
+cluster <- makeCluster(detectCores()-1)
 ```
 
 
-Set Model Evaluation
- - No pre processing
+## Baseline Model Fit; No PreProcessing of Data
 ```{r}
+# Prepares Workbook for Parallel Processing
+library(parallel)
+library(doParallel)
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
 #Linear Model
 set.seed(seed)
 fit.lm <- train(totalstops~.,
@@ -117,40 +130,38 @@ fit.results <- resamples(list(LM=fit.lm,
                           CART=fit.cart, 
                           KNN=fit.knn,
                           RF=fit.rf))
+
+# Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
 ```
 
-## Display results
+### Baseline Model Fit results
 ```{r}
 summary(fit.results)
 ```
 
-## Plot results of initial fit
+### Baseline Model Fit results plot
 ```{r}
 dotplot(fit.results)
 ```
 
-
-## Feature Selection
-
+### Baseline Model Fit Timings
 ```{r}
-cutoff <- 0.70
-correlations <- cor(dataset[,1:13])
-highlyCorrelated <- findCorrelation(correlations, cutoff=cutoff)
-for (value in highlyCorrelated) {
-  print(names(dataset)[value])
-}
-datasetFeatures <- dataset[,-highlyCorrelated]
-dim(datasetFeatures)
+fit.results$timings
 ```
 
 
-
-
-## Compare with pre-processing
+## Preprocessed Model Fit: Standardized
 ```{r}
+# Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
 #Linear Model
+
 set.seed(seed)
-preProc.lm <- train(totalstops~.,
+standardized.lm <- train(totalstops~.,
                 data = training,
                 method = "lm",
                 metric = metric,
@@ -160,7 +171,7 @@ preProc.lm <- train(totalstops~.,
 
 #Generalized Linear Model
 set.seed(seed)
-preProc.glm <- train(totalstops~.,
+standardized.glm <- train(totalstops~.,
                  data = training,
                  method = "glm",
                  metric = metric,
@@ -169,7 +180,7 @@ preProc.glm <- train(totalstops~.,
 
 #GLMNET
 set.seed(seed)
-preProc.glmnet <- train(totalstops~.,
+standardized.glmnet <- train(totalstops~.,
                     data = training,
                     method = "glmnet",
                     metric = metric,
@@ -178,7 +189,7 @@ preProc.glmnet <- train(totalstops~.,
 
 # SVM
 set.seed(seed)
-preProc.svm <- train(totalstops~.,
+standardized.svm <- train(totalstops~.,
                  data = training,
                  method = "svmRadial",
                  metric = metric,
@@ -188,7 +199,7 @@ preProc.svm <- train(totalstops~.,
 # CART
 set.seed(seed)
 grid <- expand.grid(.cp=c(0, 0.05, 0.1))
-preProc.cart <- train(totalstops~.,
+standardized.cart <- train(totalstops~.,
                   data = training,
                   method = "rpart",
                   metric = metric,
@@ -199,7 +210,7 @@ preProc.cart <- train(totalstops~.,
 
 # KNN
 set.seed(seed)
-preProc.knn <- train(totalstops~.,
+standardized.knn <- train(totalstops~.,
                  data = training,
                  method = "knn",
                  metric = metric,
@@ -208,11 +219,228 @@ preProc.knn <- train(totalstops~.,
 
 # Random Forest
 set.seed(seed)
-preProc.rf <- train(totalstops~.,
+standardized.rf <- train(totalstops~.,
                 data = training,
                 method = "rf",
                 metric = metric,
                 preProc=c("center", "scale"),
+                trControl = trainControl)
+
+ 
+# Results
+standardized.results <- resamples(list(LM=standardized.lm, 
+                                  GLM=standardized.glm, 
+                                  GLMNET=standardized.glmnet, 
+                                  SVM=standardized.svm,
+                                  CART=standardized.cart, 
+                                  KNN=standardized.knn,
+                                  RF=standardized.rf))
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+### Standardized Model Fit results
+```{r}
+summary(standardized.results)
+```
+
+### Standardized Model Fit results plot
+```{r}
+dotplot(standardized.results)
+```
+### Standardized Model Fit Timings
+```{r}
+standardized.results$timings
+```
+
+
+
+
+## Preprocessed Model Fit: YeoJohnson
+```{r}
+# Prepares Workbook for Parallel Processing and Initializes
+library(parallel)
+library(doParallel)
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Linear Model
+
+set.seed(seed)
+yeojohnson.lm <- train(totalstops~.,
+                data = training,
+                method = "lm",
+                metric = metric,
+                preProc=c("YeoJohnson"),
+                trControl = trainControl)
+
+
+#Generalized Linear Model
+set.seed(seed)
+yeojohnson.glm <- train(totalstops~.,
+                 data = training,
+                 method = "glm",
+                 metric = metric,
+                 preProc=c("YeoJohnson"),
+                 trControl = trainControl)
+
+#GLMNET
+set.seed(seed)
+yeojohnson.glmnet <- train(totalstops~.,
+                    data = training,
+                    method = "glmnet",
+                    metric = metric,
+                    preProc=c("YeoJohnson"),
+                    trControl = trainControl)
+
+# SVM
+set.seed(seed)
+yeojohnson.svm <- train(totalstops~.,
+                 data = training,
+                 method = "svmRadial",
+                 metric = metric,
+                 preProc=c("YeoJohnson"),
+                 trControl = trainControl)
+
+# CART
+set.seed(seed)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+yeojohnson.cart <- train(totalstops~.,
+                  data = training,
+                  method = "rpart",
+                  metric = metric,
+                  preProc=c("YeoJohnson"),
+                  tuneGrid=grid,
+                  trControl = trainControl)
+        
+
+# KNN
+set.seed(seed)
+yeojohnson.knn <- train(totalstops~.,
+                 data = training,
+                 method = "knn",
+                 metric = metric,
+                 preProc=c("YeoJohnson"),
+                 trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+yeojohnson.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                preProc=c("YeoJohnson"),
+                trControl = trainControl)
+
+ 
+# Results
+yeojohnson.results <- resamples(list(LM=yeojohnson.lm, 
+                                  GLM=yeojohnson.glm, 
+                                  GLMNET=yeojohnson.glmnet, 
+                                  SVM=yeojohnson.svm,
+                                  CART=yeojohnson.cart, 
+                                  KNN=yeojohnson.knn,
+                                  RF=yeojohnson.rf))
+
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+### YeoJohnson Model Fit results
+```{r}
+summary(yeojohnson.results)
+```
+
+### YeoJohnson Model Fit results plot
+```{r}
+dotplot(yeojohnson.results)
+```
+
+### YeoJohnson Model Fit Timings
+```{r}
+yeojohnson.results$timings
+```
+
+
+
+
+
+
+
+## PreProcessed Model Fit: Standardized and YeoJohnson Transformation
+```{r}
+# Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Linear Model
+
+set.seed(seed)
+preProc.lm <- train(totalstops~.,
+                data = training,
+                method = "lm",
+                metric = metric,
+                preProc=c("center", "scale", "YeoJohnson"),
+                trControl = trainControl)
+
+
+#Generalized Linear Model
+set.seed(seed)
+preProc.glm <- train(totalstops~.,
+                 data = training,
+                 method = "glm",
+                 metric = metric,
+                 preProc=c("center", "scale", "YeoJohnson"),
+                 trControl = trainControl)
+
+#GLMNET
+set.seed(seed)
+preProc.glmnet <- train(totalstops~.,
+                    data = training,
+                    method = "glmnet",
+                    metric = metric,
+                    preProc=c("center", "scale", "YeoJohnson"),
+                    trControl = trainControl)
+
+# SVM
+set.seed(seed)
+preProc.svm <- train(totalstops~.,
+                 data = training,
+                 method = "svmRadial",
+                 metric = metric,
+                 preProc=c("center", "scale", "YeoJohnson"),
+                 trControl = trainControl)
+
+# CART
+set.seed(seed)
+grid <- expand.grid(.cp=c(0, 0.05, 0.1))
+preProc.cart <- train(totalstops~.,
+                  data = training,
+                  method = "rpart",
+                  metric = metric,
+                  preProc=c("center", "scale", "YeoJohnson"),
+                  tuneGrid=grid,
+                  trControl = trainControl)
+        
+
+# KNN
+set.seed(seed)
+preProc.knn <- train(totalstops~.,
+                 data = training,
+                 method = "knn",
+                 metric = metric,
+                 preProc=c("center", "scale", "YeoJohnson"),
+                 trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+preProc.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                preProc=c("center", "scale", "YeoJohnson"),
                 trControl = trainControl)
 
  
@@ -224,11 +452,13 @@ preProc.results <- resamples(list(LM=preProc.lm,
                                   CART=preProc.cart, 
                                   KNN=preProc.knn,
                                   RF=preProc.rf))
+
+stopCluster(cluster)
+registerDoSEQ()
 ```
 
 
-## PreProcessing Results
-
+### PreProcessed Model Fit Results
 ```{r}
 summary(preProc.results)
 ```
@@ -237,135 +467,60 @@ summary(preProc.results)
 dotplot(preProc.results)
 ```
 
-
-
-## PreProcess with BoxCox
+### PreProcessed Model Fit Timings
 ```{r}
-#Linear Model
-set.seed(seed)
-boxcox.lm <- train(totalstops~.,
-                data = training,
-                method = "lm",
-                metric = metric,
-                preProc=c("center", "scale", "BoxCox"),
-                trControl = trainControl)
-
-
-#Generalized Linear Model
-set.seed(seed)
-boxcox.glm <- train(totalstops~.,
-                 data = training,
-                 method = "glm",
-                 metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
-                 trControl = trainControl)
-
-#GLMNET
-set.seed(seed)
-boxcox.glmnet <- train(totalstops~.,
-                    data = training,
-                    method = "glmnet",
-                    metric = metric,
-                    preProc=c("center", "scale", "BoxCox"),
-                    trControl = trainControl)
-
-# SVM
-set.seed(seed)
-boxcox.svm <- train(totalstops~.,
-                 data = training,
-                 method = "svmRadial",
-                 metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
-                 trControl = trainControl)
-
-# CART
-set.seed(seed)
-grid <- expand.grid(.cp=c(0, 0.05, 0.1))
-boxcox.cart <- train(totalstops~.,
-                  data = training,
-                  method = "rpart",
-                  metric = metric,
-                  preProc=c("center", "scale", "BoxCox"),
-                  tuneGrid=grid,
-                  trControl = trainControl)
-        
-
-# KNN
-set.seed(seed)
-boxcox.knn <- train(totalstops~.,
-                 data = training,
-                 method = "knn",
-                 metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
-                 trControl = trainControl)
-
-# Random Forest
-set.seed(seed)
-boxcox.rf <- train(totalstops~.,
-                data = training,
-                method = "rf",
-                metric = metric,
-                preProc=c("center", "scale", "BoxCox"),
-                trControl = trainControl)
-
- 
-# Results
-boxcox.results <- resamples(list(LM=boxcox.lm, 
-                                  GLM=boxcox.glm, 
-                                  GLMNET=boxcox.glmnet, 
-                                  SVM=boxcox.svm,
-                                  CART=boxcox.cart, 
-                                  KNN=boxcox.knn,
-                                  RF=boxcox.rf))
+preProc.results$timings
 ```
 
 
-## Box Cox Results
-```{r}
-summary(boxcox.results)
-```
-## Graph box cox 
-```{r}
-dotplot(boxcox.results)
-```
 
-## Additional boosting algos
+
+
+
+
+
+## Gradient Boosting Algorithms Compared to Random Forest
 
 ```{r}
+# Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
 # Gradient Boosted Machine
 set.seed(seed)
-boxcox.gbm <- train(totalstops~.,
+yeojohnson.gbm <- train(totalstops~.,
                  data = training,
                  method = "gbm",
                  metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
+                 preProc=c("YeoJohnson"),
                  trControl = trainControl)
 
-# Adaboost
-set.seed(seed)
-boxcox.adaboost <- train(totalstops~.,
+yeojohnson.xgbLinear <- train(totalstops~.,
                  data = training,
-                 method = "adaboost",
+                 method = "xgbLinear",
                  metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
+                 preProc=c("YeoJohnson"),
                  trControl = trainControl)
 
-# Adaboost
-set.seed(seed)
-boxcox.adaM1 <- train(totalstops~.,
+yeojohnson.xgbTree <- train(totalstops~.,
                  data = training,
-                 method = "AdaBoost.M1",
+                 method = "xgbTree",
                  metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
+                 preProc=c("YeoJohnson"),
                  trControl = trainControl)
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
 
 # Results
-boxcox.boosting.results <- resamples(list(adaboost = boxcox.adaboost,
-                                          adaM1 = boxcox.adaM1,
-                                          gbm = boxcox.gbm,
-                                          RF=boxcox.rf))
+boxcox.boosting.results <- resamples(list(GBM = yeojohnson.gbm,
+                                          XGBLinear = yeojohnson.xgbLinear,
+                                          XGBTree = yeojohnson.xgbTree,
+                                          RF = yeojohnson.rf))
 summary(boxcox.boosting.results)
 ```
+
 
 
 ## Tune Random Forest
@@ -392,7 +547,7 @@ fit.rfGrid <- train(totalstops~.,
                  data = training,
                  method = "rf",
                  metric = metric,
-                 preProc=c("cen ter", "scale", "BoxCox"),
+                 preProc=c("center", "scale", "BoxCox"),
                  tuneGrid = tunegrid,
                  trControl = trainControl)
 
