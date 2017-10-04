@@ -4,6 +4,7 @@ output: rmarkdown::github_document
 ---
 
 
+# Initial Baseline Model
 Load necessary package and data from file
 ```{r}
 library(caret)
@@ -23,17 +24,17 @@ set.seed(seed)
 
 # Partitions data to create validation set for model
 inVal <- createDataPartition(data$totalstops,
-                             p = .85,
+                             p = .6,
                              list = FALSE)
-validation <- data[-inVal,]
-traing_test <- data[inVal,]
+val_test <- data[-inVal,]
+training <- data[inVal,]
 
 # Create training/testing sets
-inTrain <- createDataPartition(dataset$totalstops, 
-                               p = .85,
+inTrain <- createDataPartition(val_test$totalstops, 
+                               p = .5,
                                list = FALSE)
-training <- traing_test[inTrain,]
-testing <- traing_test[-inTrain,]
+validation <- val_test[inTrain,]
+testing <- val_test[-inTrain,]
         
         
 # Set training control parameters for repeated cross validation and evaluation metric
@@ -118,18 +119,18 @@ fit.results <- resamples(list(LM=fit.lm,
                           RF=fit.rf))
 ```
 
-# Display results
+## Display results
 ```{r}
 summary(fit.results)
 ```
 
-#Plot results of initial fit
+## Plot results of initial fit
 ```{r}
 dotplot(fit.results)
 ```
 
 
-#Feature Selection
+## Feature Selection
 
 ```{r}
 cutoff <- 0.70
@@ -145,7 +146,7 @@ dim(datasetFeatures)
 
 
 
-#Compare with pre-processing
+## Compare with pre-processing
 ```{r}
 #Linear Model
 set.seed(seed)
@@ -226,7 +227,7 @@ preProc.results <- resamples(list(LM=preProc.lm,
 ```
 
 
-#PreProcessing Results
+## PreProcessing Results
 
 ```{r}
 summary(preProc.results)
@@ -238,7 +239,7 @@ dotplot(preProc.results)
 
 
 
-# PreProcess with BoxCox
+## PreProcess with BoxCox
 ```{r}
 #Linear Model
 set.seed(seed)
@@ -319,16 +320,16 @@ boxcox.results <- resamples(list(LM=boxcox.lm,
 ```
 
 
-# Box Cox Results
+## Box Cox Results
 ```{r}
 summary(boxcox.results)
 ```
-# Graph box cox 
+## Graph box cox 
 ```{r}
 dotplot(boxcox.results)
 ```
 
-# Additional boosting algos
+## Additional boosting algos
 
 ```{r}
 # Gradient Boosted Machine
@@ -367,7 +368,7 @@ summary(boxcox.boosting.results)
 ```
 
 
-# Tune Random Forest
+## Tune Random Forest
 
 ```{r}
 boxcox.rf$bestTune
@@ -376,22 +377,59 @@ boxcox.rf$bestTune
 
 ```{r}
 #Grid Search Tuning
+library(doParallel)
+library(parallel)
+
 
 trainControl <- trainControl(method = "repeatedcv", 
                              number = 10, 
                              repeats = 3, 
                              search = "grid")
 
-tunegrid <- expand.grid(.mtry = c(15:25))
+tunegrid <- expand.grid(.mtry = c(10:25))
 
 fit.rfGrid <- train(totalstops~.,
                  data = training,
                  method = "rf",
                  metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
+                 preProc=c("cen ter", "scale", "BoxCox"),
                  tuneGrid = tunegrid,
                  trControl = trainControl)
 
 fit.rfGrid
 ```
 
+
+## find optimum mtry value, then search for optimal tree value
+```{r}
+trainControl <- trainControl(method="repeatedcv", 
+                             number=10, 
+                             repeats=3, 
+                             search="grid")
+tunegrid <- expand.grid(.mtry=c(sqrt(ncol(x))))
+
+modellist <- list()
+for (ntree in c(1000, 1500, 2000, 2500)) {
+  set.seed(seed)
+  fit <- train(totalstops~., 
+               data=training, 
+               method="rf", 
+               metric=metric, 
+               tuneGrid=tunegrid,
+               trControl=trainControl, 
+               ntree=ntree)
+  key <- toString(ntree)
+  modellist[[key]] <- fit
+}
+```
+
+## Fit model to optimal mtry and tree
+
+
+
+
+## extract model
+
+
+
+## figure out how to go to production?
