@@ -13,10 +13,11 @@ joinedM365Stops <- function(){
                 group_by(date, range, millstyle, date, loom) %>%
                 summarize(avgppm = mean(ppm),
                           totalpx = sum(mpx),
-                          totalyards = sum(yds), 
+                          totalyards = sum(yds),
+                          yardsperpx = totalyards/totalpx,
                           totalstops = sum(combinedstops)) %>%
                 select(date, loom, range, millstyle, avgppm, 
-                       totalpx, totalyards, totalstops) %>%
+                       totalpx, totalyards, yardsperpx, totalstops) %>%
                 arrange(-desc(date), loom) 
         
         return(tidySQLtbl)
