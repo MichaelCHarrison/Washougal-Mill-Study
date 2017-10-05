@@ -1,6 +1,10 @@
+# This function cleans data from the Stops-MillStyleYarnBOMs.csv in preparation for joining
+# The data to the table returned by the tidyYarns.R function.
+
 tidyBom <- function(){
         library(dplyr); library(lubridate)
         
+        # In future, access data from database 
         bom_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/Stops-MillStyleYarnBOMs.csv"))
         
         names(bom_tbl) <- tolower(names(bom_tbl))
