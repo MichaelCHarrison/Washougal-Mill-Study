@@ -53,7 +53,7 @@ cluster <- makeCluster(detectCores()-1)
 ```
 
 
-## Baseline Model Fit; No PreProcessing of Data
+## Baseline Model Fit: No PreProcessing of Data
 ```{r}
 # Prepares Workbook for Parallel Processing
 library(parallel)
@@ -376,7 +376,6 @@ cluster <- makeCluster(detectCores()-1)
 registerDoParallel(cluster)
 
 #Linear Model
-
 set.seed(seed)
 preProc.lm <- train(totalstops~.,
                 data = training,
@@ -384,7 +383,6 @@ preProc.lm <- train(totalstops~.,
                 metric = metric,
                 preProc=c("center", "scale", "YeoJohnson"),
                 trControl = trainControl)
-
 
 #Generalized Linear Model
 set.seed(seed)
@@ -424,7 +422,6 @@ preProc.cart <- train(totalstops~.,
                   tuneGrid=grid,
                   trControl = trainControl)
         
-
 # KNN
 set.seed(seed)
 preProc.knn <- train(totalstops~.,
@@ -457,12 +454,12 @@ stopCluster(cluster)
 registerDoSEQ()
 ```
 
-
 ### PreProcessed Model Fit Results
 ```{r}
 summary(preProc.results)
 ```
 
+### PreProcessed Model Fit results plot
 ```{r}
 dotplot(preProc.results)
 ```
@@ -477,7 +474,10 @@ preProc.results$timings
 
 
 
-
+### PreProcessed Model results timing
+```{r}
+preProc.results$timings
+```
 
 ## Gradient Boosting Algorithms Compared to Random Forest
 
@@ -488,25 +488,29 @@ registerDoParallel(cluster)
 
 # Gradient Boosted Machine
 set.seed(seed)
-yeojohnson.gbm <- train(totalstops~.,
+preProc.gbm <- train(totalstops~.,
                  data = training,
                  method = "gbm",
                  metric = metric,
-                 preProc=c("YeoJohnson"),
+                 preProc=c("center", "scale", "YeoJohnson"),
                  trControl = trainControl)
 
-yeojohnson.xgbLinear <- train(totalstops~.,
+# XGBLinear
+set.seed(seed)
+preProc.xgbLinear <- train(totalstops~.,
                  data = training,
                  method = "xgbLinear",
                  metric = metric,
-                 preProc=c("YeoJohnson"),
+                 preProc=c("center", "scale", "YeoJohnson"),
                  trControl = trainControl)
 
-yeojohnson.xgbTree <- train(totalstops~.,
+# XGBTree
+set.seed(seed)
+preProc.xgbTree <- train(totalstops~.,
                  data = training,
                  method = "xgbTree",
                  metric = metric,
-                 preProc=c("YeoJohnson"),
+                 preProc=c("center", "scale", "YeoJohnson"),
                  trControl = trainControl)
 
 #Stops Parallel Processing
@@ -514,54 +518,69 @@ stopCluster(cluster)
 registerDoSEQ()
 
 # Results
-boxcox.boosting.results <- resamples(list(GBM = yeojohnson.gbm,
-                                          XGBLinear = yeojohnson.xgbLinear,
-                                          XGBTree = yeojohnson.xgbTree,
-                                          RF = yeojohnson.rf))
-summary(boxcox.boosting.results)
+preproc.boosting.results <- resamples(list(GBM = preProc.gbm,
+                                          XGBLinear = preProc.xgbLinear,
+                                          XGBTree = preProc.xgbTree,
+                                          RF = preProc.rf))
 ```
 
+### Boosting Algorithm Results
+```{r}
+summary(preproc.boosting.results)
+```
 
 
 ## Tune Random Forest
 
 ```{r}
-boxcox.rf$bestTune
+preProc.rf$bestTune
 ```
 
-
+### Tuning mtry using grid search 
 ```{r}
 #Grid Search Tuning
-library(doParallel)
-library(parallel)
-
-
 trainControl <- trainControl(method = "repeatedcv", 
                              number = 10, 
                              repeats = 3, 
-                             search = "grid")
-
+                             search = "grid",
+                             allowParallel = TRUE)
+metric = "RMSE"
 tunegrid <- expand.grid(.mtry = c(10:25))
 
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Fits model with mtry value 
+set.seed(seed)
 fit.rfGrid <- train(totalstops~.,
                  data = training,
                  method = "rf",
                  metric = metric,
-                 preProc=c("center", "scale", "BoxCox"),
+                 preProc=c("center", "scale", "YeoJohnson"),
                  tuneGrid = tunegrid,
                  trControl = trainControl)
 
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+### mtry Grid Search Results
+```{r}
 fit.rfGrid
 ```
 
 
-## find optimum mtry value, then search for optimal tree value
+
+
+## Using optimal mtry value, search for optimal tree value
 ```{r}
 trainControl <- trainControl(method="repeatedcv", 
                              number=10, 
                              repeats=3, 
                              search="grid")
-tunegrid <- expand.grid(.mtry=c(sqrt(ncol(x))))
+tunegrid <- expand.grid(.mtry=)
 
 modellist <- list()
 for (ntree in c(1000, 1500, 2000, 2500)) {
@@ -580,6 +599,9 @@ for (ntree in c(1000, 1500, 2000, 2500)) {
 
 ## Fit model to optimal mtry and tree
 
+```{r}
+trainControl
+```
 
 
 
