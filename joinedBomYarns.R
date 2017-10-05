@@ -1,7 +1,20 @@
-# This function sources the returned tables from the functions tidyYarns.R and tidyBom.R
-# and uses the data in them generate a table that displays yarn information of given
-# millstyles including the percentage of types of yarn used in millstyle, total lbs used in 
-# millstyles, and numbers of types of yarns in each millstyle
+# joinedBomYarns.R is a function that joins the tables returned by the functions
+# tidyBom.R and tidyYarns.R and manipulates the data to create an expanded bill of materials
+# for each millstyle. The fields generated through manipulation include:  
+#
+#       totallbsperpiece - total pounds of yarn used in a piece of a given millstyle
+#       num_yarns - total number of yarns used in millstyle  
+#       num_spun -  number of spun yarns used in millstyle
+#       num_pur - number of purchased yarns used in millstyle
+#       num_dyed - number of dyed yarns used in millstyle
+#       lbs_spun - pounds of spun yarns use in millstyle 
+#       lbs_pur - pounds of purchased yarn used in millstyle
+#       lbs_dyed - pounds of dyed yarn used in millstyle
+#       perc_spun - percentage of spun yarns in millstyle
+#       perc_pur - percentage of purchased yarns in millstyle
+#       perc_dyed - percentage of dyed yarns in millstyle
+#
+# 
 
 joinedBomYarns <- function(){
         library(dplyr)
