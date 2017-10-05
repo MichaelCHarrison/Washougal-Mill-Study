@@ -1,4 +1,8 @@
+# This function joins the returned tables from the joinedBomYarns.R and joinedM365Stops.R 
+# functions. The product of the join is to be used for predictive analysis. 
+
 millstyleBreakdown <- function(){
+        # load necessary library; sources functions needed to generate tables to be joined
         library(dplyr);
         source("joinedBomYarns.R"); source("joinedM365Stops.R")
         
@@ -11,10 +15,12 @@ millstyleBreakdown <- function(){
                            joined_M365Stops, 
                            by = "millstyle", 
                            all=TRUE)
+        # Removes range feature; unnecessary for predictive analysis
         breakdown <-
                 breakdown %>%
                 select(-range)
-
+        
+        # Sets loom as factor variable for predictive analysis
         breakdown$loom <- as.factor(breakdown$loom)
         
         return(breakdown)
