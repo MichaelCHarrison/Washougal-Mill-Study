@@ -529,14 +529,72 @@ preproc.boosting.results <- resamples(list(GBM = preProc.gbm,
 summary(preproc.boosting.results)
 ```
 
+# Algorithms Selected For Validation
 
-## Tune Random Forest
+- SVM
+- GBM
+- XGBLinear
+- RandomForest
+
+## Validation Set
+```{r}
+# preprocesses data for use in prediction
+preProcessParams <- preProcess(validation[,1:16], 
+                               method = c("center", "scale", "YeoJohnson"))
+# transforms the validation test set to preprocessing parameters
+transf.validation <- predict(preProcessParams, validation[,1:16])
+```
+
+## SVM Validation
+```{r}
+# SVM Final Model
+svmModel <- preProc.svm$finalModel
+
+#SVM Validation
+svmPredictions <- predict(svmModel, transf.validation)
+svmRMSE <- RMSE(svmPredictions, validation$totalstops)
+```
+
+## GBM Validation
+```{r}
+# GBM Final Model
+gbmModel <- preProc.gbm$finalModel
+
+# GBM Validation 
+gbmPredictions <- predict(gbmModel, transf.validation)
+gbmRMSE <- RMSE(gbmPredictions, validation$totalstops)
+```
+
+## XGBLinear Validation
+```{r}
+xgbLinModel <- preProc.xgbLinear$finalModel
+
+xgbLinPredictions <- predict(xgbLinModel, transf.validation)
+xgbRMSE <- RMSE(xgbLinPredictions, validation$totalstops)
+```
+
+## RandomForest Validation
+```{r}
+rfModel <- preProc.rf$finalModel
+
+rfPredictions <- predict(rfModel, transf.validation)
+rfRMSE <- RMSE(rfPredictions, validation$totalstops)
+```
+
+
+# SVM Tuning
+
+# GBM Tuning
+
+# XGBLinear Tuning
+
+# Random ForestTuning 
 
 ```{r}
 preProc.rf$bestTune
 ```
 
-### Tuning mtry using grid search 
+### Tuning mtry  
 ```{r}
 #Grid Search Tuning
 trainControl <- trainControl(method = "repeatedcv", 
@@ -566,7 +624,7 @@ stopCluster(cluster)
 registerDoSEQ()
 ```
 
-### mtry Grid Search Results
+### mtry tuning results
 ```{r}
 fit.rfGrid
 ```
@@ -688,7 +746,7 @@ summary(ntree2.results)
 ```
 
 
-## Fit model to optimal mtry and tree
+## Tuned mtry and ntree in Random Forest
 
 ```{r}
 # Generate the final model using the tuned hyperparamters, mtry and ntree
@@ -697,16 +755,19 @@ finalModel <- randomForest(totalstops~.,
                            mtry = 2,
                            ntree = 1900)
 
-trans_validation <- preProcess(validation, method = c("center", "scale", "YeoJohnson"))
+# Need to separate the features from target before running preProcess()
+preProccessParams <- preProcess(validation[,1:17], 
+                                method = c("center", "scale", "YeoJohnson"))
 
+# Transform the validation set using the parameters
+transf.validation <- predict(preprocessParmas, validation[,1:17])
 
-finalPredictions <- predict(finalModel, validation)
-confusionMatrix(finalPredictions, validation$totalstops)
+# Make predictions on validation set
+finalPredictions <- predict(finalModel, transf.validation)
+rfRMSE <- RMSE(finalPredictions, validation$totalstops)
 ```
 
 
-
-## extract model
 
 
 
