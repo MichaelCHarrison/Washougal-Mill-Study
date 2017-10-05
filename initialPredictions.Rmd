@@ -571,16 +571,62 @@ registerDoSEQ()
 fit.rfGrid
 ```
 
+### Plot mtry tuning
+```{r}
+plot(fit.rfGrid)
+```
+
+Based on the pattern observed above, mtry values of 3:9 will be tested to determine 
 
 
+### Tuning mtry using grid search2 
+```{r}
+#Grid Search Tuning
+trainControl <- trainControl(method = "repeatedcv", 
+                             number = 10, 
+                             repeats = 3, 
+                             search = "grid",
+                             allowParallel = TRUE)
+metric = "RMSE"
+tunegrid <- expand.grid(.mtry = c(3:9))
 
-## Using optimal mtry value, search for optimal tree value
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Fits model with mtry value 
+set.seed(seed)
+fit.rfGrid2 <- train(totalstops~.,
+                 data = training,
+                 method = "rf",
+                 metric = metric,
+                 preProc=c("center", "scale", "YeoJohnson"),
+                 tuneGrid = tunegrid,
+                 trControl = trainControl)
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+
+### mtry Grid Search2 Results
+```{r}
+fit.rfGrid2
+```
+
+
+### Using optimal mtry value, search for optimal tree value
 ```{r}
 trainControl <- trainControl(method="repeatedcv", 
                              number=10, 
                              repeats=3, 
                              search="grid")
-tunegrid <- expand.grid(.mtry=)
+tunegrid <- expand.grid(.mtry= 9)
+
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
 
 modellist <- list()
 for (ntree in c(1000, 1500, 2000, 2500)) {
@@ -595,12 +641,67 @@ for (ntree in c(1000, 1500, 2000, 2500)) {
   key <- toString(ntree)
   modellist[[key]] <- fit
 }
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
 ```
+
+### ntree results
+```{r}
+ntree.results <- resamples(modellist)
+summary(ntree.results)
+```
+
+```{r}
+trainControl <- trainControl(method="repeatedcv", 
+                             number=10, 
+                             repeats=3, 
+                             search="grid")
+tunegrid <- expand.grid(.mtry= 9)
+
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+modellist2 <- list()
+for (ntree in c(1700, 1900, 2100, 2300)) {
+  set.seed(seed)
+  fit <- train(totalstops~., 
+               data=training, 
+               method="rf", 
+               metric=metric, 
+               tuneGrid=tunegrid,
+               trControl=trainControl, 
+               ntree=ntree)
+  key <- toString(ntree)
+  modellist2[[key]] <- fit
+}
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+
+#results
+ntree2.results <- resamples(modellist2)
+summary(ntree2.results)
+```
+
 
 ## Fit model to optimal mtry and tree
 
 ```{r}
-trainControl
+# Generate the final model using the tuned hyperparamters, mtry and ntree
+finalModel <- randomForest(totalstops~.,
+                           data = training,
+                           mtry = 2,
+                           ntree = 1900)
+
+trans_validation <- preProcess(validation, method = c("center", "scale", "YeoJohnson"))
+
+
+finalPredictions <- predict(finalModel, validation)
+confusionMatrix(finalPredictions, validation$totalstops)
 ```
 
 
