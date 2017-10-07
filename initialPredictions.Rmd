@@ -539,23 +539,67 @@ summary(preproc.boosting.results)
 ## Validation Set
 ```{r}
 # preprocesses data for use in prediction
-preProcessParams <- preProcess(validation[,1:16], 
-                               method = c("center", "scale", "YeoJohnson"))
+X <- validation[,1:16]
+Y <- validation[,17]
+
+preProcessParams <- preProcess(X, method = c("center", "scale"))
 # transforms the validation test set to preprocessing parameters
-transf.validation <- predict(preProcessParams, validation[,1:16])
+transf.validation <- predict(preProcessParams, X)
 ```
 
 ## SVM Validation
+
+```{r}
+preProc.svm$finalModel
+```
+```{r}
+preProc.svm$bestTune
+```
+
+
+
 ```{r}
 # SVM Final Model
-svmModel <- preProc.svm$finalModel
+
+svmControl <- trainControl(method = "none",
+                           number = 0,
+                           repeats = 0,
+                           allowParallel = TRUE)
+metric = "rmse"
+
+tuneGrid <- expand.grid(.sigma = 0.01334993,
+                        .C = 1)
+
+svmModel <- train(totalstops~.,
+                  data = training,
+                  method = "svmRadial",
+                  metric = metric,
+                  tuneGrid = tuneGrid,
+                  trControl = svmControl)
+
+
+# library(kernlab)
+# svmModel <- lssvm(x = totalstops~.,
+#                   data = validation,
+#                   y = validation$totalstops)
 
 #SVM Validation
 svmPredictions <- predict(svmModel, transf.validation)
 svmRMSE <- RMSE(svmPredictions, validation$totalstops)
 ```
 
+### SVM Validation RMSE
+```{r}
+svmRMSE
+```
+
+
 ## GBM Validation
+
+```{r}
+preProc.gbm$finalModel
+```
+
 ```{r}
 # GBM Final Model
 gbmModel <- preProc.gbm$finalModel
@@ -566,6 +610,11 @@ gbmRMSE <- RMSE(gbmPredictions, validation$totalstops)
 ```
 
 ## XGBLinear Validation
+
+```{r}
+preProc.xgbLinear$finalModel
+```
+
 ```{r}
 xgbLinModel <- preProc.xgbLinear$finalModel
 
@@ -574,6 +623,11 @@ xgbRMSE <- RMSE(xgbLinPredictions, validation$totalstops)
 ```
 
 ## RandomForest Validation
+```{r}
+preProc.rf$finalModel
+```
+
+
 ```{r}
 rfModel <- preProc.rf$finalModel
 
@@ -769,6 +823,3 @@ rfRMSE <- RMSE(finalPredictions, validation$totalstops)
 
 
 
-
-
-## figure out how to go to production?
