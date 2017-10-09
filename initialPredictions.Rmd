@@ -542,6 +542,7 @@ summary(preproc.boosting.results)
 X <- validation[,1:16]
 Y <- validation[,17]
 
+# Standardize Data
 preProcessParams <- preProcess(X, method = c("center", "scale"))
 # transforms the validation test set to preprocessing parameters
 transf.validation <- predict(preProcessParams, X)
@@ -561,29 +562,23 @@ preProc.svm$bestTune
 ```{r}
 # SVM Final Model
 
-svmControl <- trainControl(method = "none",
-                           number = 0,
-                           repeats = 0,
-                           allowParallel = TRUE)
-metric = "rmse"
-
+validationControl <- trainControl(method = "none",
+                           number = 0)
 tuneGrid <- expand.grid(.sigma = 0.01334993,
                         .C = 1)
+metric = "rmse"
 
+set.seed(seed)
 svmModel <- train(totalstops~.,
                   data = training,
                   method = "svmRadial",
                   metric = metric,
+                  preProcess= c("center", "scale"),
                   tuneGrid = tuneGrid,
-                  trControl = svmControl)
-
-
-# library(kernlab)
-# svmModel <- lssvm(x = totalstops~.,
-#                   data = validation,
-#                   y = validation$totalstops)
+                  trControl = validationControl)
 
 #SVM Validation
+set.seed(seed)
 svmPredictions <- predict(svmModel, transf.validation)
 svmRMSE <- RMSE(svmPredictions, validation$totalstops)
 ```
@@ -592,6 +587,10 @@ svmRMSE <- RMSE(svmPredictions, validation$totalstops)
 ```{r}
 svmRMSE
 ```
+
+Standardized SVM RMSE: 133.66
+Validation SVM RMSE: 364.03
+RMSE Difference: 230.37
 
 
 ## GBM Validation
@@ -602,39 +601,104 @@ preProc.gbm$finalModel
 
 ```{r}
 # GBM Final Model
-gbmModel <- preProc.gbm$finalModel
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+metric = "rmse"
+
+tuneGrid <- expand.grid(.n.trees = 150,
+                        .interaction.depth = 3,
+                        .shrinkage = 0.1,
+                        .n.minobsinnode = 10)
+
+set.seed(seed)
+gbmModel <- train(totalstops~.,
+                  data = training,
+                  method = "gbm",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
 
 # GBM Validation 
 gbmPredictions <- predict(gbmModel, transf.validation)
 gbmRMSE <- RMSE(gbmPredictions, validation$totalstops)
 ```
 
+
+#GBM Validation Results
+```{r}
+gbmRMSE
+```
+
+Standardized GBM RMSE: 135.2986
+Validation GBM RMSE: 377.0595
+RMSE Difference: 241.7609
+
 ## XGBLinear Validation
 
 ```{r}
-preProc.xgbLinear$finalModel
-```
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+tuneGrid <- expand.grid(.nrounds = 50,
+                        .lambda = 0,
+                        .alpha = 0,
+                        .eta = 0.3)
+metric = "rmse"
 
-```{r}
-xgbLinModel <- preProc.xgbLinear$finalModel
+set.seed(seed)
+xgbLinModel <- train(totalstops~.,
+                  data = training,
+                  method = "xgbLinear",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
 
+#SVM Validation
+set.seed(seed)
 xgbLinPredictions <- predict(xgbLinModel, transf.validation)
-xgbRMSE <- RMSE(xgbLinPredictions, validation$totalstops)
+xgbLinRMSE <- RMSE(xgbLinPredictions, validation$totalstops)
 ```
+
+### XGB Linear Validation RMSE
+```{r}
+xgbLinRMSE
+```
+
+Standardized XGB RMSE: 129.7964
+Validation XGB RMSE: 355.166
+RMSE Difference: 225.3696
 
 ## RandomForest Validation
 ```{r}
-preProc.rf$finalModel
-```
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+tuneGrid <- expand.grid(.mtry = 23)
+metric = "rmse"
+
+set.seed(seed)
+rfModel <- train(totalstops~.,
+                  data = training,
+                  method = "rf",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
 
 
-```{r}
-rfModel <- preProc.rf$finalModel
-
+set.seed(seed)
 rfPredictions <- predict(rfModel, transf.validation)
 rfRMSE <- RMSE(rfPredictions, validation$totalstops)
 ```
 
+### RandomForest Validation RMSE
+```{r}
+rfRMSE
+```
+
+Standardized RF RMSE: 127.6949
+Validation RF RMSE: 346.2227
+RMSE Difference: 218.5278
 
 # SVM Tuning
 
@@ -644,12 +708,9 @@ rfRMSE <- RMSE(rfPredictions, validation$totalstops)
 
 # Random ForestTuning 
 
-```{r}
-preProc.rf$bestTune
-```
-
 ### Tuning mtry  
 ```{r}
+library(parallel);library(doParallel)
 #Grid Search Tuning
 trainControl <- trainControl(method = "repeatedcv", 
                              number = 10, 
@@ -669,7 +730,7 @@ fit.rfGrid <- train(totalstops~.,
                  data = training,
                  method = "rf",
                  metric = metric,
-                 preProc=c("center", "scale", "YeoJohnson"),
+                 preProcess = c("center", "scale"),
                  tuneGrid = tunegrid,
                  trControl = trainControl)
 
