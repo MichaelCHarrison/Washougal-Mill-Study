@@ -773,7 +773,7 @@ fit.rfGrid2 <- train(totalstops~.,
                  data = training,
                  method = "rf",
                  metric = metric,
-                 preProc=c("center", "scale", "YeoJohnson"),
+                 preProc=c("center", "scale"),
                  tuneGrid = tunegrid,
                  trControl = trainControl)
 
