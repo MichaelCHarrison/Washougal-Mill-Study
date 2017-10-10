@@ -1,5 +1,6 @@
-# This function joins the returned tables from the joinedBomYarns.R and joinedM365Stops.R 
-# functions. The product of the join is to be used for predictive analysis. 
+# productionBreakdown.R is a function that joins the tables returned by joinedBomYarns.R 
+# and joinedM365Stops.R. The product of the join is to be used for predictive analysis 
+# where the goal will be to predict total stops for a given millstyle.
 
 productionBreakdown <- function(){
         # load necessary library; sources functions needed to return tables to be joined
@@ -15,6 +16,7 @@ productionBreakdown <- function(){
                            joined_M365Stops, 
                            by = "millstyle", 
                            all=TRUE)
+        
         # Removes range feature; unnecessary for predictive analysis
         breakdown <-
                 breakdown %>%
@@ -23,5 +25,6 @@ productionBreakdown <- function(){
         # Sets loom as factor variable for predictive analysis
         breakdown$loom <- as.factor(breakdown$loom)
         
+        # Returns table
         return(breakdown)
 }
