@@ -1,19 +1,25 @@
-# This function cleans data from the Stops-MillStyleYarnBOMs.csv in preparation for joining
-# The data to the table returned by the tidyYarns.R function.
+# tidyBom.R is a function that cleans data from the Stops-MillStyleYarnBOMs.csv file.
+
 
 tidyBom <- function(){
+        # Load necessary libraries
         library(dplyr); library(lubridate)
         
-        # In future, access data from database 
+        # Read in data and set to local variable 
         bom_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/Stops-MillStyleYarnBOMs.csv"))
         
+        # Cleans names of fields
         names(bom_tbl) <- tolower(names(bom_tbl))
         names(bom_tbl) <- sub("\\.", "", names(bom_tbl))
         colnames(bom_tbl)[1] <- "millstyle"
-        
+        # Removes whitespace and sets millstyle to factor variable
         bom_tbl$millstyle <- gsub(" ", "", bom_tbl$millstyle, fixed = TRUE)
         bom_tbl$millstyle <- as.factor(bom_tbl$millstyle)
         
+        # Selects and orders fields from table
         bom_tbl %>%
                 select(millstyle, yarn, lbsperpiece) 
+        
+        # Returns table
+        return(bom_tbl)
 }

@@ -3,24 +3,24 @@ distributionCheck <- function(X){
         
         for(i in 1:9){
                 png(paste("./Attribute Histogram/", "hist", "0", toString(i),
-                          colnames(training)[i], ".png", sep = ""),
+                          colnames(validation)[i], ".png", sep = ""),
                     width = 480,
                     height = 480,
                     units = "px")
                 
-                hist(dataset[,i], main = paste(toString(i), "-", names(training)[i]),
-                     xlab = names(training)[i])
+                hist(dataset[,i], main = paste(toString(i), "-", names(validation)[i]),
+                     xlab = names(validation)[i])
                 dev.off()
         }
-        for(i in 10:85){
+        for(i in length(X)){
                 png(paste("./Attribute Histogram/", "hist", toString(i),
-                          colnames(training)[i], ".png", sep = ""),
+                          colnames(validation)[i], ".png", sep = ""),
                     width = 480,
                     height = 480,
                     units = "px")
                 
-                hist(training[,i], main = paste(toString(i), "-", names(training)[i]),
-                     xlab = names(training)[i])
+                hist(dataset[,i], main = paste(toString(i), "-", names(validation)[i]),
+                     xlab = names(validation)[i])
                 dev.off()
         }
 }

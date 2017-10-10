@@ -13,14 +13,14 @@
 #       perc_spun - percentage of spun yarns in millstyle
 #       perc_pur - percentage of purchased yarns in millstyle
 #       perc_dyed - percentage of dyed yarns in millstyle
-#
-# 
+
 
 joinedBomYarns <- function(){
+        # Load necessary library; sources functions needed to return tables tables to be joined
         library(dplyr)
         source("tidyYarns.R"); source("tidyBom.R")
         
-        # Set returned dataframe to variable
+        # Set returned tables to local variable
         tidy_yarns <- tidyYarns()
         tidy_Bom <- tidyBom()
         
@@ -30,7 +30,7 @@ joinedBomYarns <- function(){
                                by = "yarn",
                                all = TRUE)
         
-        # Calculate pounds per style and number of yarns in style
+        # Calculate pounds and number of yarns used per in millstyle
         totalLbs <- 
                 tidy_BomYarns %>%
                 group_by(millstyle) %>%
@@ -39,7 +39,7 @@ joinedBomYarns <- function(){
                           num_yarns = n_distinct(yarn))
         
         
-        # Calculates percentage of yarn type per piece
+        # Calculates pounds of yarn type per piece
         sumtotal <-
                 tidy_BomYarns %>%
                 group_by(millstyle, type) %>%
@@ -54,11 +54,12 @@ joinedBomYarns <- function(){
                       all.x = TRUE)
         joined_LbsPerc <- na.omit(joined_LbsPerc)
         ## NOTE: The process of omitting NAs eliminates any type == "Twist" from the 
-        ## Data.frame; consequent table manipulations involving the "Twist" type will be
+        ## table; consequent table manipulations involving the "Twist" type will be
         ## commented out
 
         
-        # Field mutations 
+        # Field mutations to generate number, pounds, and percentages of type of yarns
+        # in millstyle
         added_Perc <- 
                 joined_LbsPerc %>%
                 group_by(millstyle, type) %>%
@@ -104,12 +105,13 @@ joinedBomYarns <- function(){
                                           no = 0))
         
         
+        # Removes unnecessary fields
         joined_BomYarns <- 
                 added_Perc %>%
                 ungroup() %>% 
                 select(-yarn, -lbsperpiece, -type, -sumyarntype, -perc_present)
         
-        
+        # Reorders table fields
         joined_BomYarns <-
                 joined_BomYarns %>%
                 ungroup() %>%
