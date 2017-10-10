@@ -1,0 +1,493 @@
+---
+title: "Second Predictive Analysis"
+author: "Michael Harrison"
+date: "10/10/2017"
+output: rmarkdown::github_document
+---
+
+# Document Description
+This markdown document contains the second predictive analysis of the data prepared by the functions in this folder. The last study utilized a limited set of data due to 
+
+The aim is to predict the total stops of a production run given the breakdown of materials. 
+
+# Data Preparation
+
+```{r}
+# Load necessary package; source function to return table for analysis
+library(caret)
+source("productionBreakdown.R")
+
+# Data contains NAs generated from merging tables; removes NA rows
+data <- na.omit(productionBreakdown())
+# Removing row identifier (millstyle), and date
+data <- subset(data, select = -c(millstyle, date))
+```
+
+```{r}
+#Establishes constant seed for consequent use in model development
+seed <- 7
+
+# Partition data to create training, validation, and testing sets;
+# First split: 60/40 training/validation_testing
+set.seed(seed)
+inVal <- createDataPartition(data$totalstops,
+                             p = .6,
+                             list = FALSE)
+val_test <- data[-inVal,]
+training <- data[inVal,]
+
+# Second split: 50/50 validation/testing
+set.seed(seed)
+inTrain <- createDataPartition(val_test$totalstops, 
+                               p = .5,
+                               list = FALSE)
+validation <- val_test[inTrain,]
+testing <- val_test[-inTrain,]
+```
+
+Data set dimensions
+```{r}
+dataset.dimensions <- list(Training = dim(training), 
+                          Validation = dim(validation), 
+                          Testing = dim(testing))
+dataset.dimensions
+```
+
+
+## Baseline Model Fit
+
+```{r}
+# Set training control parameters for repeated cross validation and evaluation metric
+trainControl <- trainControl(method = "repeatedCV",
+                             number = 10,
+                             repeats = 3,
+                             allowParallel = TRUE)
+metric <- "RMSE"
+
+# Loads Parallel processing libraries
+library(parallel)
+library(doParallel)
+
+# Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+# SVM
+set.seed(seed)
+fit.svm <- train(totalstops~.,
+                 data = training,
+                 method = "svmRadial",
+                 metric = metric,
+                 preProc=c("center", "scale"),
+                 trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+fit.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                preProc=c("center", "scale"),
+                trControl = trainControl)
+
+# XGBLinear
+set.seed(seed)
+fit.xgbLinear <- train(totalstops~.,
+                 data = training,
+                 method = "xgbLinear",
+                 metric = metric,
+                 preProc=c("center", "scale"),
+                 trControl = trainControl)
+
+# Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+
+# Results
+fit.results <- resamples(list(SVM=fit.svm,
+                              RF=fit.rf,
+                              XGBLin = fit.xgbLinear))
+```
+
+### Baseline Model Fit Results
+```{r}
+dotplot(fit.results)
+```
+
+```{r}
+summary(fit.results)
+```
+
+## Model Validation
+```{r}
+# preprocesses data for use in prediction
+X <- validation[,1:16]
+Y <- validation[,17]
+
+# Standardize Data
+preProcessParams <- preProcess(X, method = c("center", "scale"))
+
+# Transforms the validation test set to preprocessing parameters
+transf.validation <- predict(preProcessParams, X)
+
+# Validation training control parameters
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+metric = "RMSE"
+```
+
+## SVM Validation
+
+Final Model tuning parameters
+```{r}
+svm.bestTune <- fit.svm$bestTune
+svm.bestTune.sigma <- svm.bestTune$sigma
+svm.bestTune.C <- svm.bestTune$C
+```
+
+```{r}
+# SVM Final Model
+tuneGrid <- expand.grid(.sigma = svm.bestTune.sigma,
+                        .C = svm.bestTune$C)
+
+set.seed(seed)
+svmModel <- train(totalstops~.,
+                  data = training,
+                  method = "svmRadial",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
+
+#SVM Validation
+set.seed(seed)
+svmPredictions <- predict(svmModel, transf.validation)
+svmRMSE <- RMSE(svmPredictions, validation$totalstops)
+```
+
+### SVM Validation RMSE
+```{r}
+svmRMSE
+```
+
+Standardized SVM RMSE: 133.66
+Validation SVM RMSE: 364.03
+RMSE Difference: 230.37
+
+
+## GBM Validation
+
+```{r}
+preProc.gbm$finalModel
+```
+
+```{r}
+# GBM Final Model
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+metric = "rmse"
+
+tuneGrid <- expand.grid(.n.trees = 150,
+                        .interaction.depth = 3,
+                        .shrinkage = 0.1,
+                        .n.minobsinnode = 10)
+
+set.seed(seed)
+gbmModel <- train(totalstops~.,
+                  data = training,
+                  method = "gbm",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
+
+# GBM Validation 
+gbmPredictions <- predict(gbmModel, transf.validation)
+gbmRMSE <- RMSE(gbmPredictions, validation$totalstops)
+```
+
+
+## GBM Validation Results
+```{r}
+gbmRMSE
+```
+
+Standardized GBM RMSE: 135.2986
+Validation GBM RMSE: 377.0595
+RMSE Difference: 241.7609
+
+## XGBLinear Validation
+
+```{r}
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+tuneGrid <- expand.grid(.nrounds = 50,
+                        .lambda = 0,
+                        .alpha = 0,
+                        .eta = 0.3)
+metric = "rmse"
+
+set.seed(seed)
+xgbLinModel <- train(totalstops~.,
+                  data = training,
+                  method = "xgbLinear",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
+
+#SVM Validation
+set.seed(seed)
+xgbLinPredictions <- predict(xgbLinModel, transf.validation)
+xgbLinRMSE <- RMSE(xgbLinPredictions, validation$totalstops)
+```
+
+### XGB Linear Validation RMSE
+```{r}
+xgbLinRMSE
+```
+
+Standardized XGB RMSE: 129.7964
+Validation XGB RMSE: 355.166
+RMSE Difference: 225.3696
+
+## RandomForest Validation
+```{r}
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+tuneGrid <- expand.grid(.mtry = 23)
+metric = "rmse"
+
+set.seed(seed)
+rfModel <- train(totalstops~.,
+                  data = training,
+                  method = "rf",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  trControl = validationControl)
+
+
+set.seed(seed)
+rfPredictions <- predict(rfModel, transf.validation)
+rfRMSE <- RMSE(rfPredictions, validation$totalstops)
+```
+
+### RandomForest Validation RMSE
+```{r}
+rfRMSE
+```
+
+Standardized RF RMSE: 127.6949
+Validation RF RMSE: 346.2227
+RMSE Difference: 218.5278
+
+# SVM Tuning
+
+# GBM Tuning
+
+# XGBLinear Tuning
+
+# Random ForestTuning 
+
+### Tuning mtry  
+```{r}
+library(parallel);library(doParallel)
+#Grid Search Tuning
+trainControl <- trainControl(method = "repeatedcv", 
+                             number = 10, 
+                             repeats = 3, 
+                             search = "grid",
+                             allowParallel = TRUE)
+metric = "RMSE"
+tunegrid <- expand.grid(.mtry = c(10:25))
+
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Fits model with mtry value 
+set.seed(seed)
+fit.rfGrid <- train(totalstops~.,
+                 data = training,
+                 method = "rf",
+                 metric = metric,
+                 preProcess = c("center", "scale"),
+                 tuneGrid = tunegrid,
+                 trControl = trainControl)
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+### mtry tuning results
+```{r}
+fit.rfGrid
+```
+
+### Plot mtry tuning
+```{r}
+plot(fit.rfGrid)
+```
+
+Based on the pattern observed above, mtry values of 3:9 will be tested to determine 
+
+
+### Tuning mtry using grid search2 
+```{r}
+#Grid Search Tuning
+trainControl <- trainControl(method = "repeatedcv", 
+                             number = 10, 
+                             repeats = 3, 
+                             search = "grid",
+                             allowParallel = TRUE)
+metric = "RMSE"
+tunegrid <- expand.grid(.mtry = c(3:9))
+
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Fits model with mtry value 
+set.seed(seed)
+fit.rfGrid2 <- train(totalstops~.,
+                 data = training,
+                 method = "rf",
+                 metric = metric,
+                 preProc=c("center", "scale"),
+                 tuneGrid = tunegrid,
+                 trControl = trainControl)
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+```{r}
+plot(fit.rfGrid2)
+```
+
+
+### mtry Grid Search2 Results
+```{r}
+fit.rfGrid2
+```
+
+
+### Using optimal mtry value, search for optimal tree value
+```{r}
+trainControl <- trainControl(method="repeatedcv", 
+                             number=10, 
+                             repeats=3, 
+                             search="grid")
+tunegrid <- expand.grid(.mtry= 10)
+
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+modellist <- list()
+for (ntree in c(1000, 1500, 2000, 2500)) {
+  set.seed(seed)
+  fit <- train(totalstops~., 
+               data=training, 
+               method="rf", 
+               metric=metric, 
+               tuneGrid=tunegrid,
+               trControl=trainControl, 
+               ntree=ntree)
+  key <- toString(ntree)
+  modellist[[key]] <- fit
+}
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+### ntree results
+```{r}
+ntree.results <- resamples(modellist)
+summary(ntree.results)
+```
+
+```{r}
+trainControl <- trainControl(method="repeatedcv", 
+                             number=10, 
+                             repeats=3, 
+                             search="grid")
+tunegrid <- expand.grid(.mtry= 9)
+
+#Initializes Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+modellist2 <- list()
+for (ntree in c(1700, 1900, 2100, 2200, 2300, 2500)) {
+  set.seed(seed)
+  fit <- train(totalstops~., 
+               data=training, 
+               method="rf", 
+               metric=metric, 
+               tuneGrid=tunegrid,
+               trControl=trainControl, 
+               ntree=ntree)
+  key <- toString(ntree)
+  modellist2[[key]] <- fit
+}
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+
+#results
+ntree2.results <- resamples(modellist2)
+summary(ntree2.results)
+```
+
+
+## Tuned mtry and ntree in Random Forest
+
+```{r}
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+tuneGrid <- expand.grid(.mtry = 9)
+metric = "rmse"
+
+#Initialize Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
+
+#Train model with tuned parameters
+set.seed(seed)
+rfModelTuned <- train(totalstops~.,
+                  data = training,
+                  method = "rf",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  ntree = 2300,
+                  trControl = validationControl)
+
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+
+set.seed(seed)
+rfTunedPredictions <- predict(rfModelTuned, transf.validation)
+rfRMSE <- RMSE(rfTunedPredictions, validation$totalstops)
+rfRMSE
+
+# # Generate the final model using the tuned hyperparamters, mtry and ntree
+# finalModel <- randomForest(totalstops~.,
+#                            data = training,
+#                            mtry = 9,
+#                            ntree = 2300)
+```
+
+
+Standardized RF RMSE: 127.6949
+Validation RF RMSE: 346.2227
+RMSE Difference: 218.5278
+Tuned RF RMSE: 317.1614
