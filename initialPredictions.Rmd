@@ -782,6 +782,10 @@ stopCluster(cluster)
 registerDoSEQ()
 ```
 
+```{r}
+plot(fit.rfGrid2)
+```
+
 
 ### mtry Grid Search2 Results
 ```{r}
@@ -795,7 +799,7 @@ trainControl <- trainControl(method="repeatedcv",
                              number=10, 
                              repeats=3, 
                              search="grid")
-tunegrid <- expand.grid(.mtry= 9)
+tunegrid <- expand.grid(.mtry= 10)
 
 #Initializes Parallel Processing
 cluster <- makeCluster(detectCores()-1)
@@ -838,7 +842,7 @@ cluster <- makeCluster(detectCores()-1)
 registerDoParallel(cluster)
 
 modellist2 <- list()
-for (ntree in c(1700, 1900, 2100, 2300)) {
+for (ntree in c(1700, 1900, 2100, 2200, 2300, 2500)) {
   set.seed(seed)
   fit <- train(totalstops~., 
                data=training, 
@@ -867,8 +871,8 @@ summary(ntree2.results)
 # Generate the final model using the tuned hyperparamters, mtry and ntree
 finalModel <- randomForest(totalstops~.,
                            data = training,
-                           mtry = 2,
-                           ntree = 1900)
+                           mtry = 9,
+                           ntree = 2300)
 
 # Need to separate the features from target before running preProcess()
 preProccessParams <- preProcess(validation[,1:17], 
@@ -881,6 +885,3 @@ transf.validation <- predict(preprocessParmas, validation[,1:17])
 finalPredictions <- predict(finalModel, transf.validation)
 rfRMSE <- RMSE(finalPredictions, validation$totalstops)
 ```
-
-
-
