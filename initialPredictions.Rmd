@@ -868,20 +868,44 @@ summary(ntree2.results)
 ## Tuned mtry and ntree in Random Forest
 
 ```{r}
-# Generate the final model using the tuned hyperparamters, mtry and ntree
-finalModel <- randomForest(totalstops~.,
-                           data = training,
-                           mtry = 9,
-                           ntree = 2300)
+validationControl <- trainControl(method = "none",
+                                  number = 0)
+tuneGrid <- expand.grid(.mtry = 9)
+metric = "rmse"
 
-# Need to separate the features from target before running preProcess()
-preProccessParams <- preProcess(validation[,1:17], 
-                                method = c("center", "scale", "YeoJohnson"))
+#Initialize Parallel Processing
+cluster <- makeCluster(detectCores()-1)
+registerDoParallel(cluster)
 
-# Transform the validation set using the parameters
-transf.validation <- predict(preprocessParmas, validation[,1:17])
+#Train model with tuned parameters
+set.seed(seed)
+rfModelTuned <- train(totalstops~.,
+                  data = training,
+                  method = "rf",
+                  metric = metric,
+                  preProcess= c("center", "scale"),
+                  tuneGrid = tuneGrid,
+                  ntree = 2300,
+                  trControl = validationControl)
 
-# Make predictions on validation set
-finalPredictions <- predict(finalModel, transf.validation)
-rfRMSE <- RMSE(finalPredictions, validation$totalstops)
+#Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+
+set.seed(seed)
+rfTunedPredictions <- predict(rfModelTuned, transf.validation)
+rfRMSE <- RMSE(rfTunedPredictions, validation$totalstops)
+rfRMSE
+
+# # Generate the final model using the tuned hyperparamters, mtry and ntree
+# finalModel <- randomForest(totalstops~.,
+#                            data = training,
+#                            mtry = 9,
+#                            ntree = 2300)
 ```
+
+
+Standardized RF RMSE: 127.6949
+Validation RF RMSE: 346.2227
+RMSE Difference: 218.5278
+Tuned RF RMSE: 317.1614
