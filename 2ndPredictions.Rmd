@@ -256,24 +256,25 @@ rf.results
 
 ## Validation Comparison
 ```{r}
-validationResults <- list('SVM' = c(svm.results),
-                          'XGBLinear' = c(xgbLinear.results),
-                          'RF' = c(rf.results))
-as.data.frame(validationResults)
-
-
+validationResults <- rbind(SVM = svm.results, 
+                           XGBLinear = xgbLinear.results, 
+                           RandomForest = rf.results)
+        
+validationResults
 ```
-
 
 # Model Tuning
 ## SVM Tuning
+
 ## XGBLinear Tuning
 
-## Random ForestTuning 
+## RandomForest Tuning 
 
 ### Tuning mtry  
 ```{r}
+# Load packages
 library(parallel);library(doParallel)
+
 #Grid Search Tuning
 trainControl <- trainControl(method = "repeatedcv", 
                              number = 10, 
@@ -281,7 +282,7 @@ trainControl <- trainControl(method = "repeatedcv",
                              search = "grid",
                              allowParallel = TRUE)
 metric = "RMSE"
-tunegrid <- expand.grid(.mtry = c(10:25))
+tuenGrid <- expand.grid(.mtry = c(5:15))
 
 #Initializes Parallel Processing
 cluster <- makeCluster(detectCores()-1)
@@ -294,7 +295,7 @@ fit.rfGrid <- train(totalstops~.,
                  method = "rf",
                  metric = metric,
                  preProcess = c("center", "scale"),
-                 tuneGrid = tunegrid,
+                 tuneGrid = tuneGrid,
                  trControl = trainControl)
 
 #Stops Parallel Processing
@@ -302,80 +303,34 @@ stopCluster(cluster)
 registerDoSEQ()
 ```
 
-### mtry tuning results
-```{r}
-fit.rfGrid
-```
-
-### Plot mtry tuning
+### mtry Tuning Results
 ```{r}
 plot(fit.rfGrid)
 ```
 
-Based on the pattern observed above, mtry values of 3:9 will be tested to determine 
-
-
-### Tuning mtry using grid search2 
-```{r}
-#Grid Search Tuning
-trainControl <- trainControl(method = "repeatedcv", 
-                             number = 10, 
-                             repeats = 3, 
-                             search = "grid",
-                             allowParallel = TRUE)
-metric = "RMSE"
-tunegrid <- expand.grid(.mtry = c(3:9))
-
-#Initializes Parallel Processing
-cluster <- makeCluster(detectCores()-1)
-registerDoParallel(cluster)
-
-#Fits model with mtry value 
-set.seed(seed)
-fit.rfGrid2 <- train(totalstops~.,
-                 data = training,
-                 method = "rf",
-                 metric = metric,
-                 preProc=c("center", "scale"),
-                 tuneGrid = tunegrid,
-                 trControl = trainControl)
-
-#Stops Parallel Processing
-stopCluster(cluster)
-registerDoSEQ()
-```
-
-```{r}
-plot(fit.rfGrid2)
-```
-
-
-### mtry Grid Search2 Results
-```{r}
-fit.rfGrid2
-```
-
-
 ### Using optimal mtry value, search for optimal tree value
 ```{r}
+rfMtry <- fit.rfGrid$bestTune$mtry
+
 trainControl <- trainControl(method="repeatedcv", 
                              number=10, 
                              repeats=3, 
-                             search="grid")
-tunegrid <- expand.grid(.mtry= 10)
+                             allowParallel = TRUE)
+tuneGrid <- expand.grid(.mtry= rfMtry)
+metric <- "RMSE"
 
 #Initializes Parallel Processing
 cluster <- makeCluster(detectCores()-1)
 registerDoParallel(cluster)
 
 modellist <- list()
-for (ntree in c(1000, 1500, 2000, 2500)) {
+for (ntree in c(1700, 1900, 2100, 2200, 2300, 2500)) {
   set.seed(seed)
   fit <- train(totalstops~., 
                data=training, 
                method="rf", 
                metric=metric, 
-               tuneGrid=tunegrid,
+               tuneGrid=tuneGrid,
                trControl=trainControl, 
                ntree=ntree)
   key <- toString(ntree)
@@ -387,54 +342,33 @@ stopCluster(cluster)
 registerDoSEQ()
 ```
 
-### ntree results
+
 ```{r}
+# Set to global variable
 ntree.results <- resamples(modellist)
 summary(ntree.results)
 ```
 
+
+### ntree Tuning Results
+
 ```{r}
-trainControl <- trainControl(method="repeatedcv", 
-                             number=10, 
-                             repeats=3, 
-                             search="grid")
-tunegrid <- expand.grid(.mtry= 9)
+dotplot(ntree.results)
+```
 
-#Initializes Parallel Processing
-cluster <- makeCluster(detectCores()-1)
-registerDoParallel(cluster)
-
-modellist2 <- list()
-for (ntree in c(1700, 1900, 2100, 2200, 2300, 2500)) {
-  set.seed(seed)
-  fit <- train(totalstops~., 
-               data=training, 
-               method="rf", 
-               metric=metric, 
-               tuneGrid=tunegrid,
-               trControl=trainControl, 
-               ntree=ntree)
-  key <- toString(ntree)
-  modellist2[[key]] <- fit
-}
-
-#Stops Parallel Processing
-stopCluster(cluster)
-registerDoSEQ()
-
-#results
-ntree2.results <- resamples(modellist2)
-summary(ntree2.results)
+### Set ntree to global variable
+```{r}
+rfNtree <- 2300
 ```
 
 
-## Tuned mtry and ntree in Random Forest
+### Tuned mtry and ntree in Random Forest
 
 ```{r}
 validationControl <- trainControl(method = "none",
                                   number = 0)
-tuneGrid <- expand.grid(.mtry = 9)
-metric = "rmse"
+tuneGrid <- expand.grid(.mtry = rfMtry)
+metric = "RMSE"
 
 #Initialize Parallel Processing
 cluster <- makeCluster(detectCores()-1)
@@ -448,27 +382,17 @@ rfModelTuned <- train(totalstops~.,
                   metric = metric,
                   preProcess= c("center", "scale"),
                   tuneGrid = tuneGrid,
-                  ntree = 2300,
+                  ntree = rfNtree,
                   trControl = validationControl)
 
 #Stops Parallel Processing
 stopCluster(cluster)
 registerDoSEQ()
 
+# Predict on Validation set
 set.seed(seed)
 rfTunedPredictions <- predict(rfModelTuned, transf.validation)
-rfRMSE <- RMSE(rfTunedPredictions, validation$totalstops)
-rfRMSE
-
-# # Generate the final model using the tuned hyperparamters, mtry and ntree
-# finalModel <- randomForest(totalstops~.,
-#                            data = training,
-#                            mtry = 9,
-#                            ntree = 2300)
+rfTunedRMSE <- RMSE(rfTunedPredictions, validation$totalstops)
+rfTunedRMSE
 ```
 
-
-Standardized RF RMSE: 127.6949
-Validation RF RMSE: 346.2227
-RMSE Difference: 218.5278
-Tuned RF RMSE: 317.1614
