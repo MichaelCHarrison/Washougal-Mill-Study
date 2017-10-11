@@ -1,7 +1,6 @@
-# This function reads in data from the 4 csvs pertaining to yarn type (purchased, twist,
-# dyed, and spun) and binds them into a single table The new table is then
-# cleaned 
-
+# tidyYarns.R is a function that reads in data from the 4 csvs pertaining to yarn type 
+# (purchased, twist, dyed, and spun) and binds them into a single table. The function then 
+# cleans the table
 
 tidyYarns <- function(){
         # Load necessary library
