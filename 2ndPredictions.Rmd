@@ -11,18 +11,20 @@ This markdown document contains the second predictive analysis of the data prepa
 The aim is to predict the total stops of a production run given the breakdown of materials. 
 
 # Data Preparation
-
+## Load Packages and Functions
 ```{r}
 # Load necessary package; source function to return table for analysis
 library(caret)
 source("productionBreakdown.R")
-
+```
+## Prepare Data
+```{r}
 # Data contains NAs generated from merging tables; removes NA rows
 data <- na.omit(productionBreakdown())
 # Removing row identifier (millstyle), and date
 data <- subset(data, select = -c(millstyle, date))
 ```
-
+## Partition Data for Training, Validation, & Testing
 ```{r}
 #Establishes constant seed for consequent use in model development
 seed <- 7
@@ -45,7 +47,7 @@ validation <- val_test[inTrain,]
 testing <- val_test[-inTrain,]
 ```
 
-Data set dimensions
+### Data set dimensions
 ```{r}
 dataset.dimensions <- list(Training = dim(training), 
                           Validation = dim(validation), 
@@ -54,8 +56,8 @@ dataset.dimensions
 ```
 
 
-## Baseline Model Fit
-
+# Baseline Model Fit
+## Baseline Models Training
 ```{r}
 # Set training control parameters for repeated cross validation and evaluation metric
 trainControl <- trainControl(method = "repeatedCV",
@@ -81,15 +83,6 @@ fit.svm <- train(totalstops~.,
                  preProc=c("center", "scale"),
                  trControl = trainControl)
 
-# Random Forest
-set.seed(seed)
-fit.rf <- train(totalstops~.,
-                data = training,
-                method = "rf",
-                metric = metric,
-                preProc=c("center", "scale"),
-                trControl = trainControl)
-
 # XGBLinear
 set.seed(seed)
 fit.xgbLinear <- train(totalstops~.,
@@ -98,6 +91,15 @@ fit.xgbLinear <- train(totalstops~.,
                  metric = metric,
                  preProc=c("center", "scale"),
                  trControl = trainControl)
+
+# Random Forest
+set.seed(seed)
+fit.rf <- train(totalstops~.,
+                data = training,
+                method = "rf",
+                metric = metric,
+                preProc=c("center", "scale"),
+                trControl = trainControl)
 
 # Stops Parallel Processing
 stopCluster(cluster)
@@ -109,7 +111,7 @@ fit.results <- resamples(list(SVM=fit.svm,
                               XGBLin = fit.xgbLinear))
 ```
 
-### Baseline Model Fit Results
+## Baseline Model Results
 ```{r}
 dotplot(fit.results)
 ```
@@ -118,7 +120,8 @@ dotplot(fit.results)
 summary(fit.results)
 ```
 
-## Model Validation
+# Baseline Model Validation
+## Data PreProcessing and Training Parameters
 ```{r}
 # preprocesses data for use in prediction
 X <- validation[,1:16]
@@ -130,25 +133,25 @@ preProcessParams <- preProcess(X, method = c("center", "scale"))
 # Transforms the validation test set to preprocessing parameters
 transf.validation <- predict(preProcessParams, X)
 
-# Validation training control parameters
+# Validation training control parameters; creates one model based on hyperparameters passed
 validationControl <- trainControl(method = "none",
                                   number = 0)
 metric = "RMSE"
 ```
 
 ## SVM Validation
-
-Final Model tuning parameters
+### SVM tuning parameters
 ```{r}
-svm.bestTune <- fit.svm$bestTune
-svm.bestTune.sigma <- svm.bestTune$sigma
-svm.bestTune.C <- svm.bestTune$C
+tunedSigma <- fit.svm$bestTune$sigma
+tunedC <- fit.svm$bestTune$C
 ```
 
+### SVM Validation Model Training and Prediction
+Train model with tuned hyperparameters and predict on validation set
 ```{r}
 # SVM Final Model
-tuneGrid <- expand.grid(.sigma = svm.bestTune.sigma,
-                        .C = svm.bestTune$C)
+tuneGrid <- expand.grid(.sigma = tunedSigma,
+                        .C = tunedC)
 
 set.seed(seed)
 svmModel <- train(totalstops~.,
@@ -165,67 +168,31 @@ svmPredictions <- predict(svmModel, transf.validation)
 svmRMSE <- RMSE(svmPredictions, validation$totalstops)
 ```
 
-### SVM Validation RMSE
+### SVM Validation Results
 ```{r}
-svmRMSE
+svm.results <- list(baselineRMSE = min(fit.svm$results$RMSE),
+                    validationRMSE = svmRMSE,
+                    difference = min(fit.svm$results$RMSE) - svmRMSE)
+svm.results
 ```
 
-Standardized SVM RMSE: 133.66
-Validation SVM RMSE: 364.03
-RMSE Difference: 230.37
-
-
-## GBM Validation
-
-```{r}
-preProc.gbm$finalModel
-```
-
-```{r}
-# GBM Final Model
-validationControl <- trainControl(method = "none",
-                                  number = 0)
-metric = "rmse"
-
-tuneGrid <- expand.grid(.n.trees = 150,
-                        .interaction.depth = 3,
-                        .shrinkage = 0.1,
-                        .n.minobsinnode = 10)
-
-set.seed(seed)
-gbmModel <- train(totalstops~.,
-                  data = training,
-                  method = "gbm",
-                  metric = metric,
-                  preProcess= c("center", "scale"),
-                  tuneGrid = tuneGrid,
-                  trControl = validationControl)
-
-# GBM Validation 
-gbmPredictions <- predict(gbmModel, transf.validation)
-gbmRMSE <- RMSE(gbmPredictions, validation$totalstops)
-```
-
-
-## GBM Validation Results
-```{r}
-gbmRMSE
-```
-
-Standardized GBM RMSE: 135.2986
-Validation GBM RMSE: 377.0595
-RMSE Difference: 241.7609
 
 ## XGBLinear Validation
-
+### XGBLinear tuning Parameters
 ```{r}
-validationControl <- trainControl(method = "none",
-                                  number = 0)
-tuneGrid <- expand.grid(.nrounds = 50,
-                        .lambda = 0,
-                        .alpha = 0,
-                        .eta = 0.3)
-metric = "rmse"
+# Set XGBlinear tuning parameters to global variable
+xgbNrounds <- fit.xgbLinear$finalModel$tuneValue$nrounds
+xgbLambda <- fit.xgbLinear$finalModel$tuneValue$lambda
+xgbAlpha <- fit.xgbLinear$finalModel$tuneValue$alpha
+xgbEta <- fit.xgbLinear$finalModel$tuneValue$eta
+```
+
+### XGBLinear Validation Model Training and Prediction
+```{r}
+tuneGrid <- expand.grid(.nrounds = xgbNrounds,
+                        .lambda = xgbLambda,
+                        .alpha = xgbAlpha,
+                        .eta = xgbEta)
 
 set.seed(seed)
 xgbLinModel <- train(totalstops~.,
@@ -236,59 +203,73 @@ xgbLinModel <- train(totalstops~.,
                   tuneGrid = tuneGrid,
                   trControl = validationControl)
 
-#SVM Validation
+# XGBLinear Validation
 set.seed(seed)
 xgbLinPredictions <- predict(xgbLinModel, transf.validation)
 xgbLinRMSE <- RMSE(xgbLinPredictions, validation$totalstops)
 ```
 
-### XGB Linear Validation RMSE
+### XGBLinear Validation Results
 ```{r}
-xgbLinRMSE
+xgbLinear.results <- list(baselineRMSE = min(fit.xgbLinear$results$RMSE),
+                          validationRMSE = xgbLinRMSE,
+                          difference = min(fit.xgbLinear$results$RMSE) - xgbLinRMSE)
+xgbLinear.results
 ```
 
-Standardized XGB RMSE: 129.7964
-Validation XGB RMSE: 355.166
-RMSE Difference: 225.3696
 
-## RandomForest Validation
+## RandomForest Validation Validation Model Training and Prediction
+### RandomForest tuning Parameters
 ```{r}
-validationControl <- trainControl(method = "none",
-                                  number = 0)
-tuneGrid <- expand.grid(.mtry = 23)
-metric = "rmse"
+# Set RandomForest tuning parameter to global variable
+rfMtry <- fit.rf$bestTune$mtry
+```
+
+### RandomForest Validation Model Training and Prediction
+```{r}
+tuneGrid <- expand.grid(.mtrt = rfMtry)
 
 set.seed(seed)
 rfModel <- train(totalstops~.,
-                  data = training,
-                  method = "rf",
-                  metric = metric,
-                  preProcess= c("center", "scale"),
-                  tuneGrid = tuneGrid,
-                  trControl = validationControl)
+                 data = training,
+                 method = "rf",
+                 metric = metric,
+                 preProcess= c("center", "scale"),
+                 tuneGrid = tuneGrid,
+                 trControl = validationControl)
 
-
+# RandomForest Validation
 set.seed(seed)
 rfPredictions <- predict(rfModel, transf.validation)
 rfRMSE <- RMSE(rfPredictions, validation$totalstops)
 ```
 
-### RandomForest Validation RMSE
+### RandomForest Validation Results
 ```{r}
-rfRMSE
+rf.results <- list(baselineRMSE = min(fit.rf$results$RMSE),
+                   validationRMSE = rfRMSE,
+                   difference = min(fit.rf$results$RMSE) - rfRMSE)
+rf.results
 ```
 
-Standardized RF RMSE: 127.6949
-Validation RF RMSE: 346.2227
-RMSE Difference: 218.5278
 
-# SVM Tuning
 
-# GBM Tuning
+## Validation Comparison
+```{r}
+validationResults <- list('SVM' = c(svm.results),
+                          'XGBLinear' = c(xgbLinear.results),
+                          'RF' = c(rf.results))
+as.data.frame(validationResults)
 
-# XGBLinear Tuning
 
-# Random ForestTuning 
+```
+
+
+# Model Tuning
+## SVM Tuning
+## XGBLinear Tuning
+
+## Random ForestTuning 
 
 ### Tuning mtry  
 ```{r}
