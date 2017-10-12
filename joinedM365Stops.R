@@ -18,11 +18,16 @@ joinedM365Stops <- function(){
         tidy_m365 <- tidyM365()
         tidy_Stops <- tidyStops()
         
-        sqltbl <- sqldf("SELECT date, loom, range, millstyle, ppm, mpx, yds, combinedstops 
-                         FROM tidy_m365
-                         JOIN tidy_Stops USING(date, loom, range)")
+        # replaced SQL query with data.table merge to keep consistency across scripts
+        # sqltbl <- sqldf("SELECT date, loom, range, millstyle, ppm, mpx, yds, combinedstops 
+        #                  FROM tidy_m365
+        #                  JOIN tidy_Stops USING(date, loom, range)")
+
+        tidy_M365Stops <- merge(tidy_m365, 
+                               tidy_Stops, 
+                               by = c("date", "loom", "range"))
         
-        tidySQLtbl <- sqltbl %>%
+        tidy_M365Stops <- tidy_M365Stops %>%
                 group_by(date, range, millstyle, loom) %>%
                 summarize(avgppm = mean(ppm),
                           totalpx = sum(mpx),
@@ -33,7 +38,7 @@ joinedM365Stops <- function(){
                        totalpx, totalyards, yardsperpx, totalstops) %>%
                 arrange(-desc(date), loom) 
         
-        return(tidySQLtbl)
+        return(tidy_M365Stops)
 }
 
 # source sqldf package:
