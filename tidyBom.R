@@ -1,6 +1,5 @@
 # tidyBom.R is a function that cleans data from the Stops-MillStyleYarnBOMs.csv file.
 
-
 tidyBom <- function(){
         # Load necessary packages
         library(dplyr)
@@ -12,6 +11,7 @@ tidyBom <- function(){
         names(bom_tbl) <- tolower(names(bom_tbl))
         names(bom_tbl) <- sub("\\.", "", names(bom_tbl))
         colnames(bom_tbl)[1] <- "millstyle"
+        
         # Removes whitespace and sets millstyle to factor variable
         bom_tbl$millstyle <- gsub(" ", "", bom_tbl$millstyle, fixed = TRUE)
         bom_tbl$millstyle <- as.factor(bom_tbl$millstyle)

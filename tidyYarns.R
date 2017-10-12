@@ -19,7 +19,7 @@ tidyYarns <- function(){
         # Binds the four yarn tables into a single table
         yarn_df <- bind_rows(pur_df, twist_df, dyed_df, spun_df)
         
-        # Cleans table names and millstyles listed 
+        # Cleans table names and millstyles listed twist
         names(yarn_df) <- tolower(names(yarn_df))
         names(yarn_df) <- sub("\\.","",names(yarn_df))
         
