@@ -1,19 +1,21 @@
 ---
-title: "R Notebook"
+title: "Initial Predictive Analysis"
 output: rmarkdown::github_document
 ---
 
+# Document Description
+This markdown document contains the initial predictive analysis of the data prepared by the functions in this folder. The aim is to predict the total stops of a production run given the breakdown of materials. 
 
-# Initial Model Fit; without date feature
+# Baseline Model Fit for selected algorithms
 
-Load necessary package and data from file
 ```{r}
+# Load necessary package; source function to return table for analysis
 library(caret)
-source("millstyleBreakdown.R")
+source("productionBreakdown.R")
 
-# Data contains NAs generated from merging tables
-data <- na.omit(millstyleBreakdown())
-# Removing row identifier (millstyle), and initially date
+# Data contains NAs generated from merging tables; removes NA rows
+data <- na.omit(productionBreakdown())
+# Removing row identifier (millstyle), and date
 data <- subset(data, select = -c(millstyle, date))
 ```
 
@@ -21,23 +23,39 @@ data <- subset(data, select = -c(millstyle, date))
 ```{r}
 #Establishes constant seed for consequent use in model development
 seed <- 7
-set.seed(seed)
 
-# Partitions data to create training, validation, and testing sets for model comparison;
-# Data is split 60/20/20 training, validation, testing
+# Partition data to create training, validation, and testing sets;
+# First split: 60/40 training/validation_testing
+set.seed(seed)
 inVal <- createDataPartition(data$totalstops,
                              p = .6,
                              list = FALSE)
 val_test <- data[-inVal,]
 training <- data[inVal,]
 
+# Second split: 50/50 validation/testing
+set.seed(seed)
 inTrain <- createDataPartition(val_test$totalstops, 
                                p = .5,
                                list = FALSE)
 validation <- val_test[inTrain,]
 testing <- val_test[-inTrain,]
-        
-        
+```
+
+
+## Baseline Model Fit
+
+Inital algorithm suite to be benchmark for baseline performance: 
+- Linear Model (LM)
+- Generalized Linear Model (GLM)
+- Lasso and Elastic-Net Regularized Generalized Linear Models (GLMNet)
+- Classification and Regression Tree (CART)
+- K-Nearest Neighbors (KNN)
+- Random Forest (RF)
+
+Data will not be pre-processed
+
+```{r}
 # Set training control parameters for repeated cross validation and evaluation metric
 trainControl <- trainControl(method = "repeatedCV",
                              number = 10,
@@ -45,19 +63,11 @@ trainControl <- trainControl(method = "repeatedCV",
                              allowParallel = TRUE)
 metric <- "RMSE"
 
-
-# Prepares Workbook for Parallel Processing
+# Loads Parallel processing libraries
 library(parallel)
 library(doParallel)
-cluster <- makeCluster(detectCores()-1)
-```
 
-
-## Baseline Model Fit: No PreProcessing of Data
-```{r}
-# Prepares Workbook for Parallel Processing
-library(parallel)
-library(doParallel)
+# Initializes Parallel Processing
 cluster <- makeCluster(detectCores()-1)
 registerDoParallel(cluster)
 
@@ -121,7 +131,10 @@ fit.rf <- train(totalstops~.,
                 metric = metric,
                 trControl = trainControl)
 
- 
+# Stops Parallel Processing
+stopCluster(cluster)
+registerDoSEQ()
+
 # Results
 fit.results <- resamples(list(LM=fit.lm, 
                           GLM=fit.glm, 
@@ -130,10 +143,6 @@ fit.results <- resamples(list(LM=fit.lm,
                           CART=fit.cart, 
                           KNN=fit.knn,
                           RF=fit.rf))
-
-# Stops Parallel Processing
-stopCluster(cluster)
-registerDoSEQ()
 ```
 
 ### Baseline Model Fit results
@@ -625,7 +634,7 @@ gbmRMSE <- RMSE(gbmPredictions, validation$totalstops)
 ```
 
 
-#GBM Validation Results
+# GBM Validation Results
 ```{r}
 gbmRMSE
 ```
