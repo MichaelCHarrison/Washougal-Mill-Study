@@ -25,6 +25,6 @@ def tidyYarns():
 	yarns_df = yarns_df[['yarn', 'type']]
 
 	# Drop duplicate rows
-	yarns_df = yarns_df.drop_duplicates
+	yarns_df = yarns_df.drop_duplicates()
 
 	return yarns_df
