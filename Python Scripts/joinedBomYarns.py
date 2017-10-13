@@ -21,7 +21,7 @@ def joinedBomYarns():
 	from tidyBom import  tidyBom
 	from tidyYarns import tidyYarns
 
-	# Load functions and set to local variables
+	# Set returned dataframe to local variables
 	tidy_Bom = tidyBom() 
 	tidy_Yarns = tidyYarns()
 
@@ -31,6 +31,22 @@ def joinedBomYarns():
 
 	# Create fields for pounds and number of yarns used per millstyle 
 	millstyles = tidy_BomYarns.groupby('millstyle')
-	totalLbs = (millstyles.agg({'totallbsperpiece' : 'sum'}))
+	totalLbs = (millstyles.agg({'totallbsperpiece' : 'sum',
+								'yarn' : 'count'})
+		    			  .rename(columns = {"lbsperpiece" : "totallbsperpiece",
+		    			  					 "yarn" : "num_yarns"}))
 
-	return 
+	# Creates field for sum of yarn by type
+	millstylesyarns = tidy_BomYarns.groupby('millstyle','type')
+	sumtotal = (millstylesyarns.agg({'lbsperpiece': 'sum'})
+							   .rename(columns = {"lbsperpiece" : "sumyarntype"))
+
+	# Merge Fields 
+	joined_lbsType = pd.merge(totalLbs, sumtype, left_index = True, right_index = True).reset_index()
+
+	# Creates Perctange Field
+	joined_lbsType = joined_lbsType.assign(perc_present = joined_lbsType.sumyarntype / joined_lbsType.totallbsperpiece)
+
+
+
+	return joined_BomYarns 
