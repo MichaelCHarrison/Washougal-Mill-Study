@@ -11,7 +11,7 @@
 
 joinedM365Stops <- function(){
         # Load packages and functions
-        library(sqldf); library(dplyr)
+        library(dplyr)
         source("tidyM365.R"); source("tidyStops.R")
         
         # Set returned tables to local variable
@@ -32,8 +32,7 @@ joinedM365Stops <- function(){
                           yardsperpx = totalyards/totalpx,
                           totalstops = sum(combinedstops)) %>%
                 select(date, loom, range, millstyle, avgppm, 
-                       totalpx, totalyards, yardsperpx, totalstops) %>%
-                arrange(-desc(date), loom) 
+                       totalpx, totalyards, yardsperpx, totalstops)
         
         return(joined_M365Stops)
 }
