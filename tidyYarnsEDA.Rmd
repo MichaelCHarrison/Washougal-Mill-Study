@@ -1,15 +1,47 @@
 ---
-title: "tidyYarnEDA"
+title: "tidyYarns Exploratory Data Analysis"
 ---
-#Load library dependencies
+#Load library and data dependencies
 ```{r}
 library(ggplot2)
+source("tidyYarns.R")
+tidy_yarns <- tidyYarns()
 ```
 
 
-Yarn type distribution
+# Total number of yarns
+```{r}
+length(unique(tidy_yarns$yarn))
+```
+
+# Yarn type distribution
 ```{r}
 ggplot(data = tidy_yarns) +
         geom_bar(mapping = aes(type))
+```
+
+# Unique Dyed Yarns
+```{r}
+unique(tidy_yarns[which(tidy_yarns$type == "Dye"),])
+
+```
+
+
+
+# Unique Purchased Yarns
+```{r}
+unique(tidy_yarns[which(tidy_yarns$type == "Pur"),])
+```
+
+# Unique Spun Yarns
+
+```{r}
+unique(tidy_yarns[which(tidy_yarns$type == "Spun"),])
+```
+
+# Unique Twist Yarns
+
+```{r}
+unique(tidy_yarns[which(tidy_yarns$type == "Twist"),])
 ```
 
