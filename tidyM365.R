@@ -25,7 +25,7 @@ tidyM365 <- function(){
 
         # Selects and orders fields from the table
         m365_tbl %>% 
-                select(range, millstyle, order, duedate, date, yds, loom) %>%
+                select(range, millstyle, order, date, yds, loom) %>%
                 print()
         
         # Returns table
