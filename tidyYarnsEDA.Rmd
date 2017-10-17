@@ -1,0 +1,15 @@
+---
+title: "tidyYarnEDA"
+---
+#Load library dependencies
+```{r}
+library(ggplot2)
+```
+
+
+Yarn type distribution
+```{r}
+ggplot(data = tidy_yarns) +
+        geom_bar(mapping = aes(type))
+```
+
