@@ -24,9 +24,8 @@ tidyM365 <- function(){
         m365_tbl$range <- gsub("(^[^1-9]*)(\\d+)((-|[A-Z]).+$)", "\\2", m365_tbl$millstyle)
 
         # Selects and orders fields from the table
-        m365_tbl %>% 
-                select(range, millstyle, order, date, yds, loom) %>%
-                print()
+        m365_tbl <- m365_tbl %>% 
+                select(range, millstyle, order, date, yds, loom)
         
         # Returns table
         return(m365_tbl)
