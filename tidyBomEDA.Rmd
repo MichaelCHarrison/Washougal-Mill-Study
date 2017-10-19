@@ -1,0 +1,14 @@
+---
+title: "tidyBom Exploratory Data Analysis"
+---
+
+# Load Libraries and data dependencies
+```{r}
+library(ggplot2)
+source("tidyBom.R")
+
+tidy_Bom <- tidyBom()
+```
+
+
+
