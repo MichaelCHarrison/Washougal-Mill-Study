@@ -1,0 +1,9 @@
+---
+title: "tidy M365 Exploratory Data Analysis"
+---
+
+```{r}
+library(dplyr)
+source("tidyM365.R")
+```
+
