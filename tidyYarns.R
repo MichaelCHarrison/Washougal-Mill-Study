@@ -7,13 +7,13 @@ tidyYarns <- function(){
         library(dplyr)
         
         # Read in data sets to local variable
-        pur_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-PurchasedYarns.csv",
+        pur_df <- read.csv("~/Washougal-Mill-Study/CSVs/Stops-PurchasedYarns.csv",
                            stringsAsFactors=FALSE)
-        twist_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-TwistYarns.csv",
+        twist_df <-read.csv("~/Washougal-Mill-Study/CSVs/Stops-TwistYarns.csv",
                             stringsAsFactors=FALSE)
-        dyed_df <-read.csv("~/Desktop/Pendleton/CSVs/Stops-DyedYarns.csv",
+        dyed_df <-read.csv("~/Washougal-Mill-Study/CSVs/Stops-DyedYarns.csv",
                            stringsAsFactors=FALSE)
-        spun_df <- read.csv("~/Desktop/Pendleton/CSVs/Stops-SpunYarns.csv",
+        spun_df <- read.csv("~/Washougal-Mill-Study/CSVs/Stops-SpunYarns.csv",
                             stringsAsFactors=FALSE)
         
         # Binds the four yarn tables into a single table

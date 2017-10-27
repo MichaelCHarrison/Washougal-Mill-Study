@@ -5,7 +5,7 @@ tidyM365 <- function(){
         library(dplyr); library(lubridate)
 
         # Read in data and set to local variable        
-        m365_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/M365.csv", 
+        m365_tbl <- tbl_df(read.csv("~/Washougal-Mill-Study/CSVs/M365.csv", 
                            na.strings = "N/A"))
         
         # Cleans column names of dataset

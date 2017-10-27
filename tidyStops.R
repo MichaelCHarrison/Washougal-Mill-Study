@@ -5,7 +5,7 @@ tidyStops <- function(){
         library(dplyr); library(lubridate)
         
         # Read in data and set to local variable
-        stops_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/Stops-Extract.csv"))
+        stops_tbl <- tbl_df(read.csv("~/Washougal-Mill-Study/CSVs/Stops-Extract.csv"))
         
         # Cleans names
         names(stops_tbl) <- tolower(names(stops_tbl))

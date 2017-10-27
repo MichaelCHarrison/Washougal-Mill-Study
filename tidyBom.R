@@ -5,7 +5,7 @@ tidyBom <- function(){
         library(dplyr)
         
         # Read in data and set to local variable 
-        bom_tbl <- tbl_df(read.csv("~/Desktop/Pendleton/CSVs/Stops-MillStyleYarnBOMs.csv"))
+        bom_tbl <- tbl_df(read.csv("~/Washougal-Mill-Study/CSVs/Stops-MillStyleYarnBOMs.csv"))
         
         # Cleans names of fields
         names(bom_tbl) <- tolower(names(bom_tbl))
@@ -17,7 +17,8 @@ tidyBom <- function(){
         bom_tbl$millstyle <- as.factor(bom_tbl$millstyle)
         
         # Selects and orders fields from table
-        bom_tbl %>%
+        bom_tbl <- 
+                bom_tbl %>%
                 select(millstyle, yarn, lbsperpiece) 
         
         # Returns table
