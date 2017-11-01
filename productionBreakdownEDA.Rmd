@@ -1,0 +1,12 @@
+---
+title: "R Notebook"
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+source("productionBreakdown.R")
+
+production <- productionBreakdown()
+```
+

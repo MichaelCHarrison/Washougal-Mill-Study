@@ -1,0 +1,11 @@
+---
+title: "joinedBomYarns Exploratory Data Analysis"
+---
+
+```{r}
+libary(dplyr)
+source("joinedBomYarns")
+
+joined_bomyarns <- joinedBomYarns()
+```
+
