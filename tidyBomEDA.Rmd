@@ -5,10 +5,64 @@ title: "tidyBom Exploratory Data Analysis"
 # Load Libraries and data dependencies
 ```{r}
 library(ggplot2)
+library(dplyr)
 source("tidyBom.R")
 
-tidy_Bom <- tidyBom()
+raw_bom <- read.csv("~/Washougal-Mill-Study/CSVs/Stops-MillStyleYarnBoms.csv",
+                            stringsAsFactors=FALSE)
+tidy_bom <- tidyBom()
+```
+
+# Head of Data
+```{r}
+head(tidy_bom, 10)
+```
+
+# Unique millstyles
+```{r}
+length(unique(tidy_bom$millstyle))
+```
+
+# Unique Yarns
+```{r}
+length(unique(tidy_bom$yarn))
 ```
 
 
+# total weight by millstyle
+```{r}
+millstyleweights <- tidy_bom %>% 
+        group_by(millstyle) %>% 
+        summarise(totalweight = sum(lbsperpiece))
+millstyleweights
+```
+
+# millstyle weight summary
+```{r}
+summary(millstyleweights$totalweight)
+```
+
+
+# millstyle weight distribution
+```{r}
+qplot(millstyleweights$totalweight)
+```
+
+# Yarn utilization
+
+Consider eliminating yarns that are only used for single millstyles to eliminate noise 
+
+```{r}
+yarn_util <- tidy_bom %>% 
+        group_by(yarn) %>% 
+        summarise(yarn_usage = n()) %>%
+        arrange(-yarn_usage)
+yarn_util
+```
+
+# yarn util summary
+
+```{r}
+summary(yarn_util$yarn_usage)
+```
 
