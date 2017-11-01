@@ -3,7 +3,69 @@ title: "tidy M365 Exploratory Data Analysis"
 ---
 
 ```{r}
+library(ggplot2)
 library(dplyr)
 source("tidyM365.R")
+
+raw_m365 <- read.csv("~/Washougal-Mill-Study/CSVs/M365.csv",
+                           stringsAsFactors=FALSE)
+tidy_m365 <- tidyM365()
+```
+
+# head of data
+```{r}
+head(tidy_m365, 10)
+```
+
+# date range of data
+```{r}
+date_range <- c(range(tidy_m365$date))
+date_range
+```
+
+# Weeks of data
+```{r}
+difftime(date_range[1], date_range[2], units = "weeks")
+```
+
+# Days of data
+```{r}
+difftime(date_range[1], date_range[2])
+```
+
+
+# Total Yards by Millstyle
+```{r}
+totalyds <- tidy_m365 %>% 
+        group_by(millstyle) %>% 
+        summarise(totalyds = sum(yds)) %>%
+        filter(totalyds > 0) %>%
+        arrange(-totalyds)
+totalyds
+```
+
+# total yards summary
+```{r}
+summary(totalyds$totalyds)
+```
+
+# Loom Utilization
+```{r}
+loom_util <- tidy_m365 %>%
+        group_by(loom) %>%
+        summarise(loom_util = n()) %>%
+        arrange(-loom_util)
+loom_util
+```
+
+
+# loom utilization distribution
+```{r}
+qplot(tidy_m365$loom)
+```
+
+# loom assignment summary
+```{r}
+summary(loom_util$loom_util)
 ```
 
