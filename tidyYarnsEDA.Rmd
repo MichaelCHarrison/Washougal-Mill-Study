@@ -5,8 +5,26 @@ title: "tidyYarns Exploratory Data Analysis"
 ```{r}
 library(ggplot2)
 source("tidyYarns.R")
+
+pur_df <- read.csv("~/Washougal-Mill-Study/CSVs/Stops-PurchasedYarns.csv",
+                           stringsAsFactors=FALSE)
+twist_df <-read.csv("~/Washougal-Mill-Study/CSVs/Stops-TwistYarns.csv",
+                            stringsAsFactors=FALSE)
+dyed_df <-read.csv("~/Washougal-Mill-Study/CSVs/Stops-DyedYarns.csv",
+                           stringsAsFactors=FALSE)
+spun_df <- read.csv("~/Washougal-Mill-Study/CSVs/Stops-SpunYarns.csv",
+                            stringsAsFactors=FALSE)
+
+raw_yarns <- bind_rows(pur_df, twist_df, dyed_df, spun_df)
+
 tidy_yarns <- tidyYarns()
 ```
+
+# head of tidy_yarns
+```{r}
+head(tidy_yarns, 10)
+```
+
 
 
 # Total number of yarns
@@ -22,7 +40,8 @@ ggplot(data = tidy_yarns) +
 
 # Unique Dyed Yarns
 ```{r}
-unique(tidy_yarns[which(tidy_yarns$type == "Dye"),])
+dye <- unique(tidy_yarns[which(tidy_yarns$type == "Dye"),])
+length(dye$yarn)
 
 ```
 
@@ -30,18 +49,21 @@ unique(tidy_yarns[which(tidy_yarns$type == "Dye"),])
 
 # Unique Purchased Yarns
 ```{r}
-unique(tidy_yarns[which(tidy_yarns$type == "Pur"),])
+pur <- unique(tidy_yarns[which(tidy_yarns$type == "Pur"),])
+length(pur$yarn)
 ```
 
 # Unique Spun Yarns
 
 ```{r}
-unique(tidy_yarns[which(tidy_yarns$type == "Spun"),])
+spun <- unique(tidy_yarns[which(tidy_yarns$type == "Spun"),])
+length(spun$yarn)
 ```
 
 # Unique Twist Yarns
 
 ```{r}
-unique(tidy_yarns[which(tidy_yarns$type == "Twist"),])
+twist <- unique(tidy_yarns[which(tidy_yarns$type == "Twist"),])
+length(twist$yarn)
 ```
 
