@@ -3,7 +3,57 @@ title: "tidyStopsEDA"
 ---
 
 ```{r}
+library(ggplot2)
 library(dplyr)
-source("tidyYarns.R")
+source("tidyStops.R")
+
+raw_stops <- read.csv("~/Washougal-Mill-Study/CSVs/Stops-Extract.csv",
+                           stringsAsFactors=FALSE)
+tidy_stops <- tidyStops()
+```
+
+
+# head of data
+```{r}
+head(tidy_stops, 10)
+```
+
+# range of dates
+```{r}
+stops_range <-range(tidy_stops$date)
+stops_range
+```
+
+# weeks of data
+```{r}
+difftime(stops_range[1], stops_range[2], units="weeks")
+```
+
+# days of data
+```{r}
+difftime(stops_range[1], stops_range[2])
+```
+
+
+# loom utilization distribution
+```{r}
+qplot(tidy_stops$loom)
+```
+
+# Shift Distribution
+```{r}
+qplot(tidy_stops$shift)
+```
+
+# Stops Distribution
+```{r}
+stop_counts <- tidy_stops %>% 
+        summarise(totalweft = sum(weft, na.rm=T),
+                  totalwarp = sum(warp, na.rm=T), 
+                  totalother = sum(other, na.rm=T))
+stop_counts
+```
+```{r}
+sum(tidy_stops$weft)
 ```
 
