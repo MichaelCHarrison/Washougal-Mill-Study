@@ -13,6 +13,11 @@ tidy_stops <- tidyStops()
 ```
 
 
+# dimensions of data
+```{r}
+dim(tidy_stops)
+```
+
 # head of data
 ```{r}
 head(tidy_stops, 10)
@@ -45,7 +50,7 @@ qplot(tidy_stops$loom)
 qplot(tidy_stops$shift)
 ```
 
-# Stops Distribution
+# Stops Distribution by Stop Type
 ```{r}
 stop_counts <- tidy_stops %>% 
         summarise(totalweft = sum(weft, na.rm=T),
@@ -53,7 +58,44 @@ stop_counts <- tidy_stops %>%
                   totalother = sum(other, na.rm=T))
 stop_counts
 ```
+
+
+# Summary
+
 ```{r}
-sum(tidy_stops$weft)
+summary(tidy_stops[,-1:-9])
+```
+
+```{r}
+range(tidy_stops$ppm)
+```
+
+```{r}
+unique(tidy_stops$ppm)
+```
+
+
+
+# Shift Separation
+
+```{r}
+shift1_stops <- tidy_stops[which(tidy_stops$shift == 1),]
+shift2_stops <- tidy_stops[which(tidy_stops$shift == 2),]
+shift3_stops <- tidy_stops[which(tidy_stops$shift == 3),]
+```
+
+## Shift 1
+```{r}
+summary(shift1_stops[,-1:-9])
+```
+
+## Shift 2
+```{r}
+summary(shift2_stops[,-1:-9])
+```
+
+# Shift 3
+```{r}
+summary(shift3_stops[,-1:-9])
 ```
 
