@@ -19,6 +19,14 @@ tidyStops <- function(){
         # Removes records of experimental millstyles
         stops_tbl <- stops_tbl[!grepl("[Ee][Xx]", stops_tbl$range),]
         
+        # Creates timing features: total time, time per stop
+        stops_tbl <- stops_tbl %>% 
+                #removes potential to create inf values
+                filter(combinedstops > 0) %>%
+                mutate(minutesweaving = (mpx * 1000)/ppm,
+                       hoursweaving = minutesweaving/60,
+                       timetilstop = minutesweaving/combinedstops)
+        
         # Returns table
         return(stops_tbl)
 }
