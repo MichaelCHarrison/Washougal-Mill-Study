@@ -76,6 +76,11 @@ unique(tidy_stops$ppm)
 
 
 
+```{r}
+filtered_stops <- tidy_stops %>% filter(ppm > 50 & hoursweaving < 10)
+```
+
+
 # Shift Separation
 
 ```{r}
@@ -94,8 +99,19 @@ summary(shift1_stops[,-1:-9])
 summary(shift2_stops[,-1:-9])
 ```
 
-# Shift 3
+## Shift 3
 ```{r}
 summary(shift3_stops[,-1:-9])
+```
+
+
+
+
+
+# Loom Seperation
+```{r}
+for(i in 1:30){
+        paste("shift",i,"_stops", sep="") <- tidy_stops[which(tidy_stops$loom == i),]
+}
 ```
 

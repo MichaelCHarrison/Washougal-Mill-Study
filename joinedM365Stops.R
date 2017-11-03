@@ -16,11 +16,11 @@ joinedM365Stops <- function(){
         
         # Set returned tables to local variable
         tidy_m365 <- tidyM365()
-        tidy_Stops <- tidyStops()
+        tidy_stops <- tidyStops()
         
         # Merge the two tables
         tidy_M365Stops <- merge(tidy_m365, 
-                               tidy_Stops, 
+                               tidy_stops, 
                                by = c("date", "loom", "range"))
         
         # Group by fields and calculate new fields
