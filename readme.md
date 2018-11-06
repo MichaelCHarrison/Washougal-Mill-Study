@@ -5,7 +5,7 @@ The objective of this study is to prototype a machine learning model to predict 
 during the course of a production cycle. 
 
 ## Data
-The raw data located in the "CSVs" folder in this repository contains the following:
+The raw data used in this study contains the following:
 
 ### M365 
 Data listing of fabric woven at the Washougal mill between 07/15/15 and 12/16/16. Each record represents an individual piece, with unique 
